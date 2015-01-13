@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 import org.peg4d.Main;
 import org.peg4d.ParsingObject;
@@ -25,6 +26,37 @@ public class PegGenerater {
 	}
 
 	private ParsingSource generate(ParsingSource source, ParsingObject node, int index) {
+		return null;
+	}
+	
+	protected String loadSource(String fileName) {
+		InputStream Stream = Main.class.getResourceAsStream("/" + fileName);
+		if (Stream == null) {
+			try {
+				File f = new File(fileName);
+//				if(f.length() > 128 * 1024) {
+//					return new FileSource(fileName);
+//				}
+				Stream = new FileInputStream(fileName);
+			} catch (IOException e) {
+				Main._Exit(1, "file error: " + fileName);
+				return null;
+			}
+		}
+		BufferedReader reader = new BufferedReader(new InputStreamReader(Stream));
+		try {
+			StringBuilder builder = new StringBuilder();
+			String line = reader.readLine();
+			while (line != null) {
+				builder.append(line);
+				builder.append("\n");
+				line = reader.readLine();
+			}
+			return builder.toString();
+		} catch (IOException e) {
+			e.printStackTrace();
+			Main._Exit(1, "file error: " + fileName);
+		}
 		return null;
 	}
 }
@@ -55,37 +87,6 @@ class XMLPegGenerater extends PegGenerater {
 			System.out.println(e);
 		}
 		return generatedFilePath;
-	}
-	
-	private String loadSource(String fileName) {
-		InputStream Stream = Main.class.getResourceAsStream("/" + fileName);
-		if (Stream == null) {
-			try {
-				File f = new File(fileName);
-//				if(f.length() > 128 * 1024) {
-//					return new FileSource(fileName);
-//				}
-				Stream = new FileInputStream(fileName);
-			} catch (IOException e) {
-				Main._Exit(1, "file error: " + fileName);
-				return null;
-			}
-		}
-		BufferedReader reader = new BufferedReader(new InputStreamReader(Stream));
-		try {
-			StringBuilder builder = new StringBuilder();
-			String line = reader.readLine();
-			while (line != null) {
-				builder.append(line);
-				builder.append("\n");
-				line = reader.readLine();
-			}
-			return builder.toString();
-		} catch (IOException e) {
-			e.printStackTrace();
-			Main._Exit(1, "file error: " + fileName);
-		}
-		return null;
 	}
 
 	private final String generate(String source, ParsingObject node, int index) {
@@ -232,4 +233,91 @@ class XMLPegGenerater extends PegGenerater {
 			}
 		}
 	}
+}
+
+
+class JSONPegGenerater extends PegGenerater {
+
+	public JSONPegGenerater(ParsingObject node) {
+		super(node);
+		// TODO Auto-generated constructor stub
+	}
+
+	@Override
+	public String generatePegFile() {
+		String generatedSource = loadSource("forValidation/rootJSON.peg");
+		generatedSource = this.generate(generatedSource, this.node, 0);
+		String generatedFilePath = "forValidation/generatedJSON.peg";
+		File newFile = new File(generatedFilePath);
+		try {
+			newFile.createNewFile();
+			File file = new File(generatedFilePath);
+			FileWriter fileWriter = new FileWriter(file);
+			fileWriter.write(generatedSource);
+			fileWriter.close();
+		} catch (IOException e) {
+			System.out.println(e);
+		}
+		return generatedFilePath;
+	}
+
+	private final String generate(String source, ParsingObject node, int index) {
+		int count = 0;
+		for (int i = 0; i < node.size(); i++) {
+			switch (node.get(i).getTag().toString()) {
+				case "Object" :
+					ParsingObject currentNode = node.get(i);
+
+					// search 'required' key
+					// and make required list
+					ArrayList<String> requiredTagList;
+					for (int j = currentNode.size(); j >= 0; j--) {
+						if (currentNode.get(j).getText().equals("required")) {
+							requiredTagList = getRequiredList(currentNode.get(j));
+							break;
+						}
+					}
+
+					// visit AST of "Object"
+					for (int j = 0; j < currentNode.size(); j++) {
+
+					}
+
+					break;
+				case "Array" :
+					break;
+				case "String" :
+					break;
+				case "Number" :
+					break;
+				case "Integer" :
+					break;
+				case "True" :
+					break;
+				case "False" :
+					break;
+				case "Null" :
+					break;
+				case "Any" :
+					break;
+			}
+		}
+		return source;
+	}
+
+	public ArrayList<String> getRequiredList(ParsingObject node) {
+		if (node.get(1).getTag().toString().equals("String")) {
+			ArrayList<String> reqList = new ArrayList<>();
+			reqList.add(node.get(1).getText());
+			return reqList;
+		} else if (node.get(1).getTag().equals("Array")) {
+			ArrayList<String> reqList = new ArrayList<>();
+			for (int i = 0; i < node.get(1).size(); i++) {
+				reqList.add(node.get(i).getText());
+			}
+			return reqList;
+		}
+		return null;
+	}
+
 }

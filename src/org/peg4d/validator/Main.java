@@ -24,10 +24,20 @@ public class Main {
 				System.out.println("VALID XML FILE");
 			} else {
 				System.out.println("INVALID XML FILE");
+				System.out.println(validator.getErrorMessage());
 			}
 			System.exit(0);
 		}
 		else if (JSONMode) {
+			JSONValidator validator = new JSONValidator(SchemaFile, InputFile);
+			boolean result = validator.run();
+			if (result) {
+				System.out.println("VALID JSON FILE");
+			} else {
+				System.out.println("INVALID JSON FILE");
+				System.out.println(validator.getErrorMessage());
+			}
+			System.exit(0);
 		}
 	}
 
@@ -45,6 +55,14 @@ public class Main {
 			index++;
 			if ((argument.equals("xml") || argument.equals("XML")) && (index < args.length)) {
 				XMLMode = true;
+				if (index < args.length)
+					SchemaFile = args[index++];
+				if (index <= args.length)
+					InputFile = args[index++];
+			}
+ else if ((argument.equals("json") || argument.equals("JSON"))
+					&& (index < args.length)) {
+				JSONMode = true;
 				if (index < args.length)
 					SchemaFile = args[index++];
 				if (index <= args.length)
