@@ -237,6 +237,8 @@ class XMLPegGenerater extends PegGenerater {
 
 
 class JSONPegGenerater extends PegGenerater {
+	int itemID = 1;
+	int objectID = 1;
 
 	public JSONPegGenerater(ParsingObject node) {
 		super(node);
@@ -262,48 +264,64 @@ class JSONPegGenerater extends PegGenerater {
 	}
 
 	private final String generate(String source, ParsingObject node, int index) {
-		int count = 0;
-		for (int i = 0; i < node.size(); i++) {
-			switch (node.get(i).getTag().toString()) {
-				case "Object" :
-					ParsingObject currentNode = node.get(i);
-
-					// search 'required' key
-					// and make required list
-					ArrayList<String> requiredTagList;
-					for (int j = currentNode.size(); j >= 0; j--) {
-						if (currentNode.get(j).getText().equals("required")) {
-							requiredTagList = getRequiredList(currentNode.get(j));
-							break;
-						}
+		ParsingObject currentNode = node.get(0);
+		if (currentNode.get(0).get(0).getText().equals("$schema")) {
+			for (int j = 1; j < currentNode.size(); j++) {
+				if (currentNode.get(j).get(0).getText().equals("type")) {
+					if (currentNode.get(j).get(1).getText().equals("array")) {
+						source += "Schema0" + "		= { BEGINARRAY (WS @Item0 (VS @Item0)* )* WS ENDARRAY #Array0 }\n\n";
+						generateArrayRules(source, currentNode, j + 1);
 					}
-
-					// visit AST of "Object"
-					for (int j = 0; j < currentNode.size(); j++) {
-
-					}
-
-					break;
-				case "Array" :
-					break;
-				case "String" :
-					break;
-				case "Number" :
-					break;
-				case "Integer" :
-					break;
-				case "True" :
-					break;
-				case "False" :
-					break;
-				case "Null" :
-					break;
-				case "Any" :
-					break;
+					// if (currentNode.get(j).get(1).equals("object")) {
+					// source += "Schema0"
+					// +
+					// "		= { BEGINARRAY (WS @Item0 (VS @Item0)* )* WS ENDARRAY #Array0 }";
+					// generateObjectRules(source, currentNode, j + 1);
+					// }
+				}
 			}
 		}
 		return source;
 	}
+	
+	public String generateArrayRules(String source, ParsingObject node, int index) {
+		String itemTitle = null;
+		if (node.get(index).get(0).getText().equals("items")) {
+			ParsingObject schemaPart = node.get(index).get(1);
+			for (int i = 0; i < schemaPart.size(); i++) {
+				if (schemaPart.get(i).get(0).getText().equals("title")) {
+					itemTitle = schemaPart.get(i).get(1).getText();
+				} else if (schemaPart.get(i).get(0).getText().equals("type")) {
+					if (schemaPart.get(i).get(1).getText().equals("object")) {
+						source += "Item" + itemID + "		= { @Object" + objectID + " #" + itemTitle + " }\n\n";
+						generate(source, schemaPart, i + 1);
+					}
+				}
+			}
+			itemID++;
+		}
+		return source;
+	}
+
+	public String generateObjectRules(String source, ParsingObject node, int index){
+		// At first, search 'required' key
+		// and make required list
+		ArrayList<String> requiredTagList;
+		for (int j = node.size(); j >= 0; j--) {
+			if (node.get(j).get(0).getText().equals("required")) {
+				requiredTagList = getRequiredList(node.get(j));
+				break;
+			}
+		}
+		if (condition) {
+			for (int i = 0; i < node.size(); i++) {
+
+			}
+		}
+		return source;
+	}
+	
+
 
 	public ArrayList<String> getRequiredList(ParsingObject node) {
 		if (node.get(1).getTag().toString().equals("String")) {
