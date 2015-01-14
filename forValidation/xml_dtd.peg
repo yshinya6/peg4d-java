@@ -1,6 +1,5 @@
 TopLevel
     = Document
-    ;
     
 Chunk 
     = Document
