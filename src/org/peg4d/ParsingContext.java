@@ -449,18 +449,19 @@ public class ParsingContext {
 			this.stackedPositions = new int[4096];
 		}
 	}
+		
+	public final boolean matchNonTerminal(NonTerminal e) {
+		if(this.stackedNonTerminals != null) {
+			int pos = this.stackedNonTerminals.size();
+			this.stackedNonTerminals.add(e);
+			stackedPositions[pos] = (int)this.pos;
+			boolean b = e.deReference().matcher.simpleMatch(this);
+			this.stackedNonTerminals.clear(pos);
+			return b;
+		}
+		return e.deReference().matcher.simpleMatch(this);
+	}
 	
-	public int pushCallStack(NonTerminal e) {
-		int pos = this.stackedNonTerminals.size();
-		this.stackedNonTerminals.add(e);
-		stackedPositions[pos] = (int)this.pos;
-		return pos;
-	}
-
-	public void popCallStack(int stacktop) {
-		this.stackedNonTerminals.clear(stacktop);
-	}
- 		
 	protected MemoTable memoTable = null;
 
 	public void initMemo(MemoizationManager conf) {
@@ -497,6 +498,19 @@ public class ParsingContext {
 		return f == null || f.booleanValue();
 	}
 
-		
+	HashMap<String, Integer> repeatMap = new HashMap<String, Integer>();
+	
+	public final void setRepeatExpression(String rule, int value) {
+		this.repeatMap.put(rule, value);
+	}
+	
+	public final int getRepeatValue(String rule) {
+		return this.repeatMap.get(rule);
+	}
+	
+	public final String getRepeatByteString(long startIndex) {
+		return this.source.substring(startIndex, this.pos);
+	}
+
 }
 
