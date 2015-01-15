@@ -34,7 +34,7 @@ public class JSONValidator {
 		ParsingSource schemaSource = ParsingSource.loadSource(JSONSchemaFile);
 		ParsingContext schemaContext = new ParsingContext(schemaSource);
 		ParsingObject node = schemaContext.parse(peg4d, "File");
-		JSONPegGenerater gen = new JSONPegGenerater(node);
+		JSONPegGenerator gen = new JSONPegGenerator(node);
 		String genPegSource = gen.generatePegFile();
 		GrammarFactory jsonGrammarFactory = new GrammarFactory();
 		Grammar genPeg = jsonGrammarFactory.newGrammar("JSON", genPegSource);
@@ -52,7 +52,7 @@ public class JSONValidator {
 		return this.errorMessage;
 	}
 
-	private String loadSource(String fileName) {
+	private StringBuilder loadSource(String fileName) {
 		InputStream Stream = Main.class.getResourceAsStream("/" + fileName);
 		if (Stream == null) {
 			try {
@@ -76,7 +76,7 @@ public class JSONValidator {
 				builder.append("\n");
 				line = reader.readLine();
 			}
-			return builder.toString();
+			return builder;
 		} catch (IOException e) {
 			e.printStackTrace();
 			Main._Exit(1, "file error: " + fileName);

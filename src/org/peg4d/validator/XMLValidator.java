@@ -33,7 +33,7 @@ public class XMLValidator {
 		ParsingSource dtdSource = ParsingSource.loadSource(DTDFile);
 		ParsingContext dtdContext = new ParsingContext(dtdSource);
 		ParsingObject node = dtdContext.parse(peg4d, "File");
-		XMLPegGenerater gen = new XMLPegGenerater(node);
+		XMLPegGenerator gen = new XMLPegGenerator(node);
 		String genPegSource = gen.generatePegFile();
 		GrammarFactory xmlGrammarFactory = new GrammarFactory();
 		Grammar genPeg = xmlGrammarFactory.newGrammar("XML", genPegSource);
