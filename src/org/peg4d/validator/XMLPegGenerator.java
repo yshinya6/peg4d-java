@@ -63,52 +63,39 @@ public class XMLPegGenerator extends PegGenerator {
 				case "element":
 					index = this.NameMap.get(subnode.get(0).getText());
 					if (this.AttMap.hasKey(subnode.get(0).getText())) {
-						if (subnode.size() == 3) {
+						if (subnode.size() == 3) { // when regular expression exists
 							sb.append("Element")
 								.append(index)
-								.append(" = { _* '<' @ElementName" )
-								.append(index)
-								.append(" _+ @Attribute")
-								.append(index)
-								.append(" _* ( '/>' / '>' _* @Members")
-								.append(index)
+								.append(" = { _* '<' @ElementName" ).append(index)
+								.append(" _+ @Attribute").append(index)
+								.append(" _* ( '/>' / '>' _* @Members").append(index)
 								.append(subnode.get(2).getText())
-								.append(" _* '</' ELEMENTNAME")
-								.append(index)
-								.append("'>' ) _* #element }\n\n");
+								.append(" _* '</' ELEMENTNAME").append(index).append("'>' ) _* #element }\n\n");
 						} else {
 							sb.append("Element")
 								.append(index)
-								.append(" = { _* '<' @ElementName")
-								.append(index)
-								.append(" _+ @Attribute")
-								.append(index)
-								.append(" _* ( '/>' / '>' _* @Members")
-								.append(index)
-								.append(" _* '</' ELEMENTNAME")
-								.append(index)
+								.append(" = { _* '<' @ElementName").append(index)
+								.append(" _+ @Attribute").append(index)
+								.append(" _* ( '/>' / '>' _* @Members").append(index)
+								.append(" _* '</' ELEMENTNAME").append(index)
 								.append("'>' ) _* #element }\n\n");
 						}
 					} else {
-						if (subnode.size() == 3) {
-							sb.append("Element")
-								.append(index)
-								.append( " = { _* '<' @ElementName")
-								.append(index)
+						if (subnode.size() == 3) { //when regular expression exists
+							sb.append("Element").append(index)
+								.append( " = { _* '<' @ElementName").append(index)
 								.append(" _* ( '/>' / '>' _* ")
-								.append("(@Members")
-								.append(index)
+								.append("(@Members").append(index)
 								.append(")")
-								.append(subnode.get(2).getText())
-								.append(" _* '</' ELEMENTNAME")
-								.append(index)
+								.append(subnode.get(2).getText()) // insert regex
+								.append(" _* '</' ELEMENTNAME").append(index)
 								.append("'>' ) _* #element }\n\n");
 						} else {
-							sb.append("Element" + index
-									+ " = { _* '<' @ElementName" + index
-									+ " _* ( '/>' / '>' _* " + "@Members"
-									+ index + " _* '</' ELEMENTNAME" + index
-									+ "'>' ) _* #element }\n\n");
+							sb.append("Element").append(index)
+								.append(" = { _* '<' @ElementName").append(index)
+								.append(" _* ( '/>' / '>' _* @Members").append(index)
+								.append(" _* '</' ELEMENTNAME").append(index)
+								.append("'>' ) _* #element }\n\n");
 						}
 					}
 					generate(sb, subnode, index);
@@ -181,7 +168,7 @@ public class XMLPegGenerator extends PegGenerator {
 							.append(" = { (@Element")
 							.append(this.NameMap.get(subnode.get(0).getText())) 
 							.append(")")
-							.append(subnode.get(1).getText()) // indicate regex
+							.append(subnode.get(1).getText()) // insert regex
 							.append(" #member}\n\n");
 					}
 					count++;
