@@ -313,7 +313,8 @@ class JSONPegGenerater extends PegGenerater {
 				break;
 			}
 		}
-		if (condition) {
+		if (node.get(index).get(0).getText().equals("properties")) {
+			ParsingObject propertiesNode = node.get(index).get(1);
 			for (int i = 0; i < node.size(); i++) {
 
 			}
