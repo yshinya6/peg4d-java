@@ -72,13 +72,13 @@ DefaultValue
 
 //Name
 AttName
-	= {@Name #attName}
+	= {NAME #attName}
 	
 ElementName
-	= {@Name #elementName}
+	= {NAME #elementName}
 	
 AttElementName
-	= {@Name #attElementName}
+	= {NAME #attElementName}
 	
 MemberName
 	= {@Name (@Regex)? #memberName}
@@ -92,7 +92,9 @@ DocTypeName
 
 Name
     = { [A-Za-z:] ( '-' / [A-Za-z0-9:._])*  #name }
-    
+
+NAME
+	=  [A-Za-z:] ( '-' / [A-Za-z0-9:._])*
 
 String
     = { '"' ( !'"' . )* '"' #string }

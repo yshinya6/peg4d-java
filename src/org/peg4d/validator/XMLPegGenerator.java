@@ -61,140 +61,20 @@ public class XMLPegGenerator extends PegGenerator {
 					break;
 					
 				case "element":
-					index = this.NameMap.get(subnode.get(0).getText());
-					if (this.AttMap.hasKey(subnode.get(0).getText())) {
-						if (subnode.size() == 3) { // when regular expression exists
-							sb.append("Element")
-								.append(index)
-								.append(" = { _* '<' @ElementName" ).append(index)
-								.append(" _+ @Attribute").append(index)
-								.append(" _* ( '/>' / '>' _* @Members").append(index)
-								.append(subnode.get(2).getText())
-								.append(" _* '</' ELEMENTNAME").append(index).append("'>' ) _* #element }\n\n");
-						} else {
-							sb.append("Element")
-								.append(index)
-								.append(" = { _* '<' @ElementName").append(index)
-								.append(" _+ @Attribute").append(index)
-								.append(" _* ( '/>' / '>' _* @Members").append(index)
-								.append(" _* '</' ELEMENTNAME").append(index)
-								.append("'>' ) _* #element }\n\n");
-						}
-					} else {
-						if (subnode.size() == 3) { //when regular expression exists
-							sb.append("Element").append(index)
-								.append( " = { _* '<' @ElementName").append(index)
-								.append(" _* ( '/>' / '>' _* ")
-								.append("(@Members").append(index)
-								.append(")")
-								.append(subnode.get(2).getText()) // insert regex
-								.append(" _* '</' ELEMENTNAME").append(index)
-								.append("'>' ) _* #element }\n\n");
-						} else {
-							sb.append("Element").append(index)
-								.append(" = { _* '<' @ElementName").append(index)
-								.append(" _* ( '/>' / '>' _* @Members").append(index)
-								.append(" _* '</' ELEMENTNAME").append(index)
-								.append("'>' ) _* #element }\n\n");
-						}
-					}
-					generate(sb, subnode, index);
-					break;
-
-				case "elementName":
-					sb.append("ElementName") 
-						.append(index)
-						.append(" = { \"")
-						.append(subnode.getText())
-						.append("\" #string }\n\n");
-					sb.append("ELEMENTNAME")
-						.append(index)
-						.append(" =  \"")
-						.append(subnode.getText())
-						.append("\"\n\n");
-					break;
-
-				case "member":
-					generate(sb, subnode, index);
-					sb.append("Members") 
-					.append(index) 
-					.append(" = {" );
-					for (int j = 0; j < subnode.size() - 1; j++) {
-						if (subnode.size() >= j + 2 && subnode.get(j + 1).getTag().toString().equals("or")) {
-							sb.append( " @Member")
-								.append(index)
-								.append("_")
-								.append(j)
-								.append(" /");
-							j++;
-						} else {
-							sb.append(" @Member")
-								.append(index)
-								.append("_")
-								.append(j);
-						}
-					}
-					sb.append( " @Member") 
-						.append(index)
-						.append("_")
-						.append(subnode.size() - 1)
-						.append("}\n\n");
-					break;
-
-				case "others":
-					sb.append( "Members")
-						.append(index)
-						.append(" =");
-					if (subnode.getText().equals("EMPTY")) {
-						sb.append( " Empty \n\n" );
-					} else if (subnode.getText().equals("ANY")) {
-						sb.append( " Any \n\n");
-					}
-					break;
-
-
-
-				case "memberName":
-					if (subnode.size() == 1) { 
-						sb.append( "Member")
-							.append(index)
-							.append("_")
-							.append(count)
-							.append(" = { @Element")
-							.append(this.NameMap.get(subnode.get(0).getText()))
-							.append(" #member}\n\n");
-					} else if (subnode.size() == 2) { //when regular expression exists
-						sb.append("Member").append(index).append("_").append(count)
-							.append(" = { (@Element")
-							.append(this.NameMap.get(subnode.get(0).getText())) 
-							.append(")")
-							.append(subnode.get(1).getText()) // insert regex
-							.append(" #member}\n\n");
-					}
-					count++;
-					break;
-
-				case "data":
-					if (node.size() > 1) {
-						sb.append("Member").append(index).append("_").append(count)
-							.append(" = { CHARDATA #data }\n\n");
-					} else {
-						sb.append("Member").append(index).append("_").append(count)
-							.append(" = { CHARDATA? #data }\n\n");
-					}
-					count++;
+					generateElementRules(sb, subnode, index);
 					break;
 
 				case "attlist":
+					index = NameMap.get(subnode.get(0).getText());
 					generate(sb, subnode, index);
 					sb.append("Attribute").append(index).append(" ={");
-					for (int j = 0; j <= subnode.size() - 2; j++) {
-						if (subnode.get(j + 1).get(2).get(0).getText().equals("#IMPLIED")) {
+					for (int i = 0; i <= subnode.size() - 2; i++) {
+						if (subnode.get(i + 1).get(2).get(0).getText().equals("#IMPLIED")) {
 							sb.append( "  (@AttParameter")
-								.append(index).append("_").append(j)
+									.append(index).append("_").append(i)
 								.append(")? _* #attribute");
-						} else if (subnode.get(j + 1).get(2).get(0).getText().equals("#REQUIRED")) {
-							sb.append( "  @AttParameter").append(index).append("_").append(j)
+						} else if (subnode.get(i + 1).get(2).get(0).getText().equals("#REQUIRED")) {
+							sb.append("  @AttParameter").append(index).append("_").append(i)
 								.append(" _* #attribute");
 						}
 					}
@@ -226,9 +106,103 @@ public class XMLPegGenerator extends PegGenerator {
 	}
 	
 	private final void generateElementRules(StringBuilder sb,ParsingObject node, int index){
-		
+		String elementName = node.get(0).getText();
+		index = this.NameMap.get(elementName);
+		if (this.AttMap.hasKey(node.get(0).getText())) { // check whether attribute exists
+			sb.append("Element").append(index)
+					.append(" = { _* '<").append(elementName)
+					.append("\' _+ @Attribute").append(index)
+					.append(" _* ( '/>' / '>' _* @Members").append(index);
+			if (node.size() == 3) { // when regular expression exists
+					sb.append(node.get(2).getText()); //regex
+				}
+			sb.append(" _* '</").append(elementName).append(">' ) _* #element }\n\n");
+			generateAttributeRules();
+		} else {
+				sb.append("Element").append(index)
+						.append(" = { _* '<").append(elementName)
+						.append("\' _* ( '/>' / '>' _* ")
+						.append("(@Members").append(index)
+						.append(")");
+				if (node.size() == 3) {  // when regular expression exists
+					sb.append(node.get(2).getText()); //regex
+				}
+				sb.append(" _* '</").append(elementName).append(">' ) _* #element }\n\n");
+		}
+		generateMemberList(sb, node, index);
 	}
 	
+	private final void generateMember(StringBuilder sb, StringBuilder members, ParsingObject node,
+			int index)
+	{
+		int count = 0;
+		for(ParsingObject subnode : node){
+			switch (subnode.getTag().toString()) {
+				case "memberName" :
+					if (subnode.size() == 1) {
+						sb.append("Member")
+								.append(index).append("_").append(count)
+								.append(" = { @Element")
+								.append(this.NameMap.get(subnode.get(0).getText()))
+								.append(" #member}\n\n");
+					} else if (subnode.size() == 2) { // when regular expression exists
+						sb.append("Member")
+								.append(index).append("_").append(count)
+								.append(" = { (@Element")
+								.append(this.NameMap.get(subnode.get(0).getText()))
+								.append(")")
+								.append(subnode.get(1).getText()) // insert regex
+								.append(" #member}\n\n");
+					}
+					members.append(" @Member").append(index).append("_").append(count);
+					count++;
+					break;
+
+				case "or" :
+					members.append(" / ");
+					break;
+
+				case "data" :
+					if (node.size() > 1) {
+						sb.append("Member").append(index).append("_").append(count)
+								.append(" = { CHARDATA #data }\n\n");
+					} else {
+						sb.append("Member").append(index).append("_").append(count)
+								.append(" = { CHARDATA? #data }\n\n");
+					}
+					members.append(" @Member").append(index).append("_").append(count);
+					count++;
+					break;
+			}
+		}
+	}
+	
+	private final void generateMemberList(StringBuilder sb, ParsingObject node, int index) {
+		for (ParsingObject subnode : node) {
+			switch (subnode.getTag().toString()) {
+				case "member" :
+					StringBuilder members = new StringBuilder();
+					generateMember(sb, members, subnode, index);
+					sb.append("Members")
+							.append(index)
+							.append(" = {")
+							.append(members.toString())
+							.append(" } \n\n");
+					break;
+
+				case "others" :
+					sb.append("Members").append(index)
+							.append(" =");
+					if (subnode.getText().equals("EMPTY")) {
+						sb.append(" Empty \n\n");
+					} else if (subnode.getText().equals("ANY")) {
+						sb.append(" Any \n\n");
+					}
+					break;
+			}
+		}
+	}
+
 	private final void generateAttributeRules(){
 		
 	}
