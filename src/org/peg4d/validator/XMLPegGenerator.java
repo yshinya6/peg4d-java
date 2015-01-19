@@ -52,7 +52,6 @@ public class XMLPegGenerator extends PegGenerator {
 	}
 	
 	private final void generate(StringBuilder sb, ParsingObject node, int index) {
-		int count = 0;
 		for (ParsingObject subnode : node) {
 			switch (subnode.getTag().toString()) {
 				case "docTypeName": // top of DTD
@@ -61,53 +60,19 @@ public class XMLPegGenerator extends PegGenerator {
 					break;
 					
 				case "element":
-					generateElementRules(sb, subnode, index);
+					generateElementRules(sb, subnode);
 					break;
 
 				case "attlist":
-					index = NameMap.get(subnode.get(0).getText());
-					generate(sb, subnode, index);
-					sb.append("Attribute").append(index).append(" ={");
-					for (int i = 0; i <= subnode.size() - 2; i++) {
-						if (subnode.get(i + 1).get(2).get(0).getText().equals("#IMPLIED")) {
-							sb.append( "  (@AttParameter")
-									.append(index).append("_").append(i)
-								.append(")? _* #attribute");
-						} else if (subnode.get(i + 1).get(2).get(0).getText().equals("#REQUIRED")) {
-							sb.append("  @AttParameter").append(index).append("_").append(i)
-								.append(" _* #attribute");
-						}
-					}
-					sb.append( "}\n\n" );
-					break;
-
-				case "attParameter":
-					if (subnode.get(2).get(0).getText().equals("#IMPLIED")) {
-						sb.append("AttParameter").append(index).append("_").append(count)
-							.append(" = { @AttName").append(index).append("_").append(count)
-							.append(" '=' (@String)? #attPara } \n\n");
-					} else {
-						sb.append("AttParameter").append(index).append("_").append(count)
-							.append(" = { @AttName").append(index).append("_").append(count)
-							.append(" '=' @String #attPara } \n\n");
-					}
-					sb.append("AttName").append(index).append("_").append(count)
-						.append(" = { '")
-						.append(subnode.get(0).getText())
-						.append("' #attName } \n\n");
-					count++;
-					break;
-
-				case "or":
-					count++;
+					generateAttributeRules(sb, subnode);
 					break;
 			}
 		}
 	}
 	
-	private final void generateElementRules(StringBuilder sb,ParsingObject node, int index){
+	private final void generateElementRules(StringBuilder sb, ParsingObject node) {
 		String elementName = node.get(0).getText();
-		index = this.NameMap.get(elementName);
+		int index = this.NameMap.get(elementName);
 		if (this.AttMap.hasKey(node.get(0).getText())) { // check whether attribute exists
 			sb.append("Element").append(index)
 					.append(" = { _* '<").append(elementName)
@@ -117,7 +82,6 @@ public class XMLPegGenerator extends PegGenerator {
 					sb.append(node.get(2).getText()); //regex
 				}
 			sb.append(" _* '</").append(elementName).append(">' ) _* #element }\n\n");
-			generateAttributeRules();
 		} else {
 				sb.append("Element").append(index)
 						.append(" = { _* '<").append(elementName)
@@ -132,6 +96,32 @@ public class XMLPegGenerator extends PegGenerator {
 		generateMemberList(sb, node, index);
 	}
 	
+	private final void generateMemberList(StringBuilder sb, ParsingObject node, int index) {
+		for (ParsingObject subnode : node) {
+			switch (subnode.getTag().toString()) {
+				case "member" :
+					StringBuilder members = new StringBuilder();
+					generateMember(sb, members, subnode, index);
+					sb.append("Members")
+							.append(index)
+							.append(" = {")
+							.append(members.toString())
+							.append(" } \n\n");
+					break;
+
+				case "others" :
+					sb.append("Members").append(index)
+							.append(" =");
+					if (subnode.getText().equals("EMPTY")) {
+						sb.append(" Empty \n\n");
+					} else if (subnode.getText().equals("ANY")) {
+						sb.append(" Any \n\n");
+					}
+					break;
+			}
+		}
+	}
+
 	private final void generateMember(StringBuilder sb, StringBuilder members, ParsingObject node,
 			int index)
 	{
@@ -177,35 +167,44 @@ public class XMLPegGenerator extends PegGenerator {
 		}
 	}
 	
-	private final void generateMemberList(StringBuilder sb, ParsingObject node, int index) {
-		for (ParsingObject subnode : node) {
-			switch (subnode.getTag().toString()) {
-				case "member" :
-					StringBuilder members = new StringBuilder();
-					generateMember(sb, members, subnode, index);
-					sb.append("Members")
-							.append(index)
-							.append(" = {")
-							.append(members.toString())
-							.append(" } \n\n");
-					break;
 
-				case "others" :
-					sb.append("Members").append(index)
-							.append(" =");
-					if (subnode.getText().equals("EMPTY")) {
-						sb.append(" Empty \n\n");
-					} else if (subnode.getText().equals("ANY")) {
-						sb.append(" Any \n\n");
+
+	private final void generateAttributeRules(StringBuilder sb, ParsingObject node) {
+		int index = NameMap.get(node.get(0).getText());
+		generateAttParameter(sb, node, index);
+		sb.append("Attribute").append(index).append(" ={");
+		for (int i = 0; i <= node.size() - 2; i++) {
+			if (node.get(i + 1).get(2).get(0).getText().equals("#IMPLIED")) {
+				sb.append("  (@AttParameter")
+						.append(index).append("_").append(i)
+						.append(")? _* #attribute");
+			} else if (node.get(i + 1).get(2).get(0).getText().equals("#REQUIRED")) {
+				sb.append("  @AttParameter").append(index).append("_").append(i)
+						.append(" _* #attribute");
+			}
+		}
+		sb.append("}\n\n");
+	}
+
+	private final void generateAttParameter(StringBuilder sb, ParsingObject node, int index) {
+		int count = 0;
+		for (ParsingObject subnode : node) {
+			if (subnode.getTag().toString().equals("attParameter")) {
+					if (subnode.get(2).get(0).getText().equals("#IMPLIED")) {
+						sb.append("AttParameter").append(index).append("_").append(count)
+								.append(" = { @AttName").append(index).append("_").append(count)
+								.append(" '=' (@String)? #attPara } \n\n");
+					} else {
+						sb.append("AttParameter").append(index).append("_").append(count)
+								.append(" = { @AttName").append(index).append("_").append(count)
+								.append(" '=' @String #attPara } \n\n");
 					}
-					break;
+					sb.append("AttName").append(index).append("_").append(count)
+							.append(" = { '")
+							.append(subnode.get(0).getText())
+							.append("' #attName } \n\n");
+					count++;
 			}
 		}
 	}
-
-	private final void generateAttributeRules(){
-		
-	}
-
-
 }

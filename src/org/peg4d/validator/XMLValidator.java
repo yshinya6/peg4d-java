@@ -127,7 +127,7 @@ public class XMLValidator {
 			}
 			pos++;
 		}
-		this.errorMessage += "\n ==================================================== \n";
+		this.errorMessage += "\n\n ==================================================== \n";
 		return;
 	}
 

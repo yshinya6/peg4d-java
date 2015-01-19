@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 
 import org.peg4d.Main;
 import org.peg4d.ParsingObject;
-import org.peg4d.ParsingSource;
 
 public class PegGenerator {
 	ParsingObject node;
@@ -22,10 +21,6 @@ public class PegGenerator {
 		return null;
 	}
 
-	private ParsingSource generate(ParsingSource source, ParsingObject node, int index) {
-		return null;
-	}
-	
 	protected StringBuilder loadSource(String fileName) {
 		InputStream Stream = Main.class.getResourceAsStream("/" + fileName);
 		if (Stream == null) {
