@@ -46,7 +46,7 @@ Regex
 	= { ( '*' / '+' / '?') #regex}
 	
 Or
-	= { _* '|'  _* #or}
+	= { _* '|' `/` _* #or}
 	
 OtherMember
 	= { ('EMPTY' / 'ANY') #others}
@@ -57,16 +57,16 @@ AttParameter
 	= { _* @AttName _* @DataType _* (@Default)? _* #attParameter}
 	 
 DataType
-	= { ('CDATA' / 'IDREF' / 'ID' / 'ENTITY' / 'ENTITIES' / 'NMTOKENS' / 'NMTOKEN' / @Enumerated ) #dataType}
+	= { ('CDATA' / 'IDREF' / 'ID' / 'ENTITY' / 'ENTITIES' / 'NMTOKENS' / @{'NMTOKEN' #NMTOKEN} / @Enumerated ) #dataType}
 	
 Enumerated
-	= { '(' _* @{ NAME #enumMember } _* ( '|' _* @{ NAME #enumMember } )+   _* ')'  _* (@DefaultValue)? #Enum }
+	= { '(' _* @{ NAME #enumMember } _* ( (@Or)  @{ NAME #enumMember } )+   _* ')'  _* #Enum }
 	
 Default
 	= { @DefaultType  _* (@DefaultValue)? #default}
 	
 DefaultType
-	= {('#REQUIRED' / '#IMPLIED' / '#FIXED' ) #defaultType}	
+	= {('#REQUIRED' / '#IMPLIED' / '#FIXED' / STRING ) #defaultType}	
 	
 DefaultValue
 	=  '"' { NAME  #defaultValue} '"'

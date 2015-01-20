@@ -37,7 +37,6 @@ public class XMLPegGenerator extends PegGenerator {
 		return generatedFilePath;
 	}
 	
-	
 	private final void getElementName(ParsingObject node) {
 		for (int i = 0; i < node.size(); i++) {
 			ParsingObject subnode = node.get(i);
@@ -60,17 +59,17 @@ public class XMLPegGenerator extends PegGenerator {
 					break;
 					
 				case "element":
-					generateElementRules(sb, subnode);
+					generateElementRule(sb, subnode);
 					break;
 
 				case "attlist":
-					generateAttributeRules(sb, subnode);
+					generateAttributeRule(sb, subnode);
 					break;
 			}
 		}
 	}
 	
-	private final void generateElementRules(StringBuilder sb, ParsingObject node) {
+	private final void generateElementRule(StringBuilder sb, ParsingObject node) {
 		String elementName = node.get(0).getText();
 		int index = this.NameMap.get(elementName);
 		if (this.AttMap.hasKey(node.get(0).getText())) { // check whether attribute exists
@@ -93,15 +92,15 @@ public class XMLPegGenerator extends PegGenerator {
 				}
 				sb.append(" _* '</").append(elementName).append(">' ) _* #element }\n\n");
 		}
-		generateMemberList(sb, node, index);
+		generateMemberListRule(sb, node, index);
 	}
 	
-	private final void generateMemberList(StringBuilder sb, ParsingObject node, int index) {
+	private final void generateMemberListRule(StringBuilder sb, ParsingObject node, int index) {
 		for (ParsingObject subnode : node) {
 			switch (subnode.getTag().toString()) {
 				case "member" :
 					StringBuilder members = new StringBuilder();
-					generateMember(sb, members, subnode, index);
+					generateMemberRule(sb, members, subnode, index);
 					sb.append("Members")
 							.append(index)
 							.append(" = {")
@@ -122,7 +121,8 @@ public class XMLPegGenerator extends PegGenerator {
 		}
 	}
 
-	private final void generateMember(StringBuilder sb, StringBuilder members, ParsingObject node,
+	private final void generateMemberRule(StringBuilder sb, StringBuilder members,
+			ParsingObject node,
 			int index)
 	{
 		int count = 0;
@@ -166,19 +166,17 @@ public class XMLPegGenerator extends PegGenerator {
 			}
 		}
 	}
-	
 
-
-	private final void generateAttributeRules(StringBuilder sb, ParsingObject node) {
+	private final void generateAttributeRule(StringBuilder sb, ParsingObject node) {
 		int index = NameMap.get(node.get(0).getText());
-		generateAttParameter(sb, node, index);
+		generateAttParameterRule(sb, node, index);
 		sb.append("Attribute").append(index).append(" ={");
 		for (int i = 0; i <= node.size() - 2; i++) {
 			if (node.get(i + 1).get(2).get(0).getText().equals("#IMPLIED")) {
 				sb.append("  (@AttParameter")
 						.append(index).append("_").append(i)
 						.append(")? _* #attribute");
-			} else if (node.get(i + 1).get(2).get(0).getText().equals("#REQUIRED")) {
+			} else {
 				sb.append("  @AttParameter").append(index).append("_").append(i)
 						.append(" _* #attribute");
 			}
@@ -186,33 +184,58 @@ public class XMLPegGenerator extends PegGenerator {
 		sb.append("}\n\n");
 	}
 
-	private final void generateAttParameter(StringBuilder sb, ParsingObject node, int index) {
+	private final void generateAttParameterRule(StringBuilder sb, ParsingObject node, int index) {
 		int count = 0;
 		for (ParsingObject subnode : node) {
 			if (subnode.getTag().toString().equals("attParameter")) {
+
 				String attName = subnode.get(0).getText();
+				String dataType = subnode.get(1).get(0).getTag().toString();
 				String defaultValue = subnode.get(2).get(0).getText();
+
 				sb.append("AttParameter").append(index).append("_").append(count)
 						.append(" = { '").append(attName);
 				if (defaultValue.equals("#IMPLIED")) {
-					if (subnode.get(1).getText().equals("NMTOKEN")) {
+					if (dataType.equals("NMTOKEN")) {
 						sb.append("' '=' (STRING)? #attPara } \n\n");
 					} else {
-					sb.append("' '=' (NAME)? #attPara } \n\n");
+						sb.append("' '=' (NSTRING)? #attPara } \n\n");
 					}
 				}
 				else if (defaultValue.equals("#FIXED")) {
 					sb.append("' '=' \"");
 					sb.append(subnode.get(2).get(1).getText());
-					sb.append("\" #attPara } \n\n");
+					sb.append("\" #FIXED } \n\n");
 				}
-				else { // #REQUIRED 
-					if (subnode.get(1).getText().equals("NMTOKEN")) {
-						sb.append("' '=' STRING #attPara } \n\n");
+				else { // #REQUIRED or Enumerated
+					switch (dataType) {
+						case "NMTOKEN" :
+							sb.append("' '=' STRING #attPara } \n\n");
+							break;
+						case "Enum" :
+							sb.append("' '=' ( ");
+							generateEnumMembers(sb, subnode.get(1).get(0));
+							sb.append(" ) #attPara } \n\n");
+							break;
+						default :
+							sb.append("' '=' NSTRING #attPara } \n\n");
+							break;
 					}
-					sb.append("' '=' NAME #attPara } \n\n");
 				}
 				count++;
+			}
+		}
+	}
+
+	private final void generateEnumMembers(StringBuilder sb, ParsingObject node) {
+		for (ParsingObject subnode : node) {
+			switch (subnode.getTag().toString()) {
+				case "enumMember" :
+					sb.append("'\"").append(subnode.getText()).append("\"'");
+					break;
+				case "or" :
+					sb.append(subnode.getText());
+					break;
 			}
 		}
 	}

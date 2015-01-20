@@ -22,11 +22,19 @@ Content
 
 Name
     = { [A-Za-z:] ( '-' / [A-Za-z0-9:._])*  #name }
-    
+
+NAME
+	= [A-Za-z:] ( '-' / [A-Za-z0-9:._])*
 
 String
-    = { '"' ( !'"' . )* '"' #string }
-    
+	= { '"' ( !'"' . )* '"' #string }
+
+STRING
+	= '"' ( !'"' . )* '"'
+
+NSTRING
+	= '"' NAME '"'
+
 
 CHARDATA
     = TEXT  
