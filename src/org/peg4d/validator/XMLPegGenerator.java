@@ -190,20 +190,29 @@ public class XMLPegGenerator extends PegGenerator {
 		int count = 0;
 		for (ParsingObject subnode : node) {
 			if (subnode.getTag().toString().equals("attParameter")) {
-					if (subnode.get(2).get(0).getText().equals("#IMPLIED")) {
-						sb.append("AttParameter").append(index).append("_").append(count)
-								.append(" = { @AttName").append(index).append("_").append(count)
-								.append(" '=' (@String)? #attPara } \n\n");
+				String attName = subnode.get(0).getText();
+				String defaultValue = subnode.get(2).get(0).getText();
+				sb.append("AttParameter").append(index).append("_").append(count)
+						.append(" = { '").append(attName);
+				if (defaultValue.equals("#IMPLIED")) {
+					if (subnode.get(1).getText().equals("NMTOKEN")) {
+						sb.append("' '=' (STRING)? #attPara } \n\n");
 					} else {
-						sb.append("AttParameter").append(index).append("_").append(count)
-								.append(" = { @AttName").append(index).append("_").append(count)
-								.append(" '=' @String #attPara } \n\n");
+					sb.append("' '=' (NAME)? #attPara } \n\n");
 					}
-					sb.append("AttName").append(index).append("_").append(count)
-							.append(" = { '")
-							.append(subnode.get(0).getText())
-							.append("' #attName } \n\n");
-					count++;
+				}
+				else if (defaultValue.equals("#FIXED")) {
+					sb.append("' '=' \"");
+					sb.append(subnode.get(2).get(1).getText());
+					sb.append("\" #attPara } \n\n");
+				}
+				else { // #REQUIRED 
+					if (subnode.get(1).getText().equals("NMTOKEN")) {
+						sb.append("' '=' STRING #attPara } \n\n");
+					}
+					sb.append("' '=' NAME #attPara } \n\n");
+				}
+				count++;
 			}
 		}
 	}

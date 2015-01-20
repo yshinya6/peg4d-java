@@ -54,19 +54,22 @@ OtherMember
 	
 //for Attlist
 AttParameter
-	= { _* @AttName _* @DataType _* @Default _* #attParameter}
+	= { _* @AttName _* @DataType _* (@Default)? _* #attParameter}
 	 
 DataType
-	= { ('CDATA'/'IDREF'/'ID'/'ENTITY'/'ENTITIES'/'NMTOKENS'/'NMTOKEN'/'Enumerated') #dataType}
+	= { ('CDATA' / 'IDREF' / 'ID' / 'ENTITY' / 'ENTITIES' / 'NMTOKENS' / 'NMTOKEN' / @Enumerated ) #dataType}
+	
+Enumerated
+	= { '(' _* @{ NAME #enumMember } _* ( '|' _* @{ NAME #enumMember } )+   _* ')'  _* (@DefaultValue)? #Enum }
 	
 Default
-	= { @DefaultType  _* (@DefaultValue)* #default}
+	= { @DefaultType  _* (@DefaultValue)? #default}
 	
 DefaultType
 	= {('#REQUIRED' / '#IMPLIED' / '#FIXED' ) #defaultType}	
 	
 DefaultValue
-	= { @String #defaultValue}
+	=  '"' { NAME  #defaultValue} '"'
 	
 
 
@@ -84,20 +87,23 @@ MemberName
 	= {@Name (@Regex)? #memberName}
 	
 EntityName
-	= {@Name #entityName}
+	= {NAME #entityName}
 	
 DocTypeName
-	= {@Name #docTypeName}
+	= {NAME #docTypeName}
 	
 
 Name
-    = { [A-Za-z:] ( '-' / [A-Za-z0-9:._])*  #name }
+	= { [A-Za-z:] ( '-' / [A-Za-z0-9:._])*  #name }
 
 NAME
 	=  [A-Za-z:] ( '-' / [A-Za-z0-9:._])*
 
 String
     = { '"' ( !'"' . )* '"' #string }
+    
+STRING
+	=  '"' ( !'"' . )* '"'
     
 
 
