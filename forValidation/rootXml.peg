@@ -36,8 +36,8 @@ NMTOKEN
 	= '"' NAME '"'
 
 
-CHARDATA
-    = ( TEXT / ENTITY )* 
+Chardata
+	= { ( @{ TEXT #text } / entity )* #PCDATA }
     
     
 TEXT
@@ -82,7 +82,7 @@ Any
 	= {ANY #any}
 
 ANY
-	= _* CHARDATA _*
+	= _* TEXT _*
 		
 
 _ = [ \t\r\n];

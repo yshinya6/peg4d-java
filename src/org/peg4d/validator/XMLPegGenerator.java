@@ -175,10 +175,10 @@ public class XMLPegGenerator extends PegGenerator {
 				case "data" :
 					if (node.size() > 1) {
 						sb.append("Member").append(index).append("_").append(count)
-								.append(" = { CHARDATA #data }\n\n");
+								.append(" = { (@Chardata) #data }\n\n");
 					} else {
 						sb.append("Member").append(index).append("_").append(count)
-								.append(" = { CHARDATA? #data }\n\n");
+								.append(" = { (@Chardata)? #data }\n\n");
 					}
 					members.append(" @Member").append(index).append("_").append(count);
 					count++;
@@ -266,16 +266,17 @@ public class XMLPegGenerator extends PegGenerator {
 		String replacedString = node.get(1).getText();
 		int entityNum = this.entityNameMap.get(entityName);
 		
-		sb.append("ENTITY").append(entityNum)
-				.append(" =  '").append(entityName).append("' \n\n");
+		sb.append("Entity").append(entityNum)
+				.append(" = { '").append(entityName).append("' `").append(replacedString)
+				.append("` #entity }\n\n");
 	}
 
 	private final void generateEntityList(StringBuilder sb) {
-		sb.append("ENTITY = '&' (");
+		sb.append("entity = '&' (");
 		for (int i = 0; i < this.entityNameMap.size() - 1; i++) {
-			sb.append(" ENTITY").append(i).append(" /");
+			sb.append(" @Entity").append(i).append(" /");
 		}
-		sb.append(" ENTITY").append(this.entityNameMap.size() - 1)
+		sb.append(" @Entity").append(this.entityNameMap.size() - 1)
 				.append(") ';' \n\n");
 	}
 }
