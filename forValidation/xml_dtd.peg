@@ -16,7 +16,7 @@ DocType
     
 
 Dtd
-    =  _*  '<!' (Element/Entity/Attlist) '>'  _*
+    =  _*  '<!' (Element/Attlist/Entity) '>'  _*
     
 
 Element
@@ -28,7 +28,7 @@ Attlist
 	
 	
 Entity
-	= _* 'ENTITY' _* {@EntityName _* @String #entity} _*
+	= _* 'ENTITY' _* {@EntityName _* ('SYSTEM')? _* @String #entity} _*
 	
 
 
@@ -57,7 +57,14 @@ AttParameter
 	= { _* @AttName _* @DataType _* (@Default)? _* #attParameter}
 	 
 DataType
-	= { ('CDATA' / 'IDREF' / 'ID' / 'ENTITY' / 'ENTITIES' / 'NMTOKENS' / @{'NMTOKEN' #NMTOKEN} / @Enumerated ) #dataType}
+	= { (@{'CDATA' #CDATA} 
+		/ @{'IDREF' #IDREF} 
+		/ @{'ID' #ID} 
+		/ @{'ENTITY' #ENTITY} 
+		/ @{'ENTITIES' #ENTITIES} 
+		/ @{'NMTOKENS'} 
+		/ @{'NMTOKEN' #NMTOKEN} 
+		/ @Enumerated ) #dataType}
 	
 Enumerated
 	= { '(' _* @{ NAME #enumMember } _* ( (@Or)  @{ NAME #enumMember } )+   _* ')'  _* #Enum }
@@ -69,7 +76,7 @@ DefaultType
 	= {('#REQUIRED' / '#IMPLIED' / '#FIXED' / STRING ) #defaultType}	
 	
 DefaultValue
-	=  '"' { NAME  #defaultValue} '"'
+	= {STRING #defaultValue}
 	
 
 
@@ -100,7 +107,7 @@ NAME
 	=  [A-Za-z:] ( '-' / [A-Za-z0-9:._])*
 
 String
-    = { '"' ( !'"' . )* '"' #string }
+    =  '"' { ( !'"' . )*  #string } '"'
     
 STRING
 	=  '"' ( !'"' . )* '"'

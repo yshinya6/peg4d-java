@@ -32,12 +32,12 @@ String
 STRING
 	= '"' ( !'"' . )* '"'
 
-NSTRING
+NMTOKEN
 	= '"' NAME '"'
 
 
 CHARDATA
-    = TEXT  
+    = ( TEXT / ENTITY )* 
     
     
 TEXT

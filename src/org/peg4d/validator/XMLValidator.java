@@ -111,6 +111,7 @@ public class XMLValidator {
 
 				break;
 			} else if (source.charAt((int) pos) == '<') {
+				endPos = pos;
 				while (!(source.charAt((int) --pos) == '>')) {
 					startPos = pos;
 				}
@@ -120,10 +121,11 @@ public class XMLValidator {
 						+ source.substring((int) startPos, (int) endPos)
 						+ " \n";
 				this.errorMessage += "Failure Character : "
-						+ source.substring((int) startPos, (int) fpos)
+						//+ source.substring((int) startPos, (int) fpos)
 						+ "\'"
 						+ source.charAt((int) fpos) + "\'"
 						+ source.substring((int) fpos + 1, (int) endPos);
+				break;
 			}
 			pos++;
 		}
