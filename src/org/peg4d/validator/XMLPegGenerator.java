@@ -65,12 +65,14 @@ public class XMLPegGenerator extends PegGenerator {
 
 	private final void generate(StringBuilder sb, ParsingObject node, int index) {
 		if (!this.entityNameMap.isEmpty()) {
+			sb.append("Chardata = { ( @{ TEXT #text} / entity )* #PCDATA }\n\n");
 			generateEntityList(sb);
 		}
+		sb.append("Chardata = { TEXT #PCDATA }\n\n");
 		for (ParsingObject subnode : node) {
 			switch (subnode.getTag().toString()) {
 				case "docTypeName": // top of DTD
-					sb.append( "Element0 = _*  Member0 _* \n\n");
+					sb.append("Element0 = Member0 _* \n\n");
 					sb.append( "Member0 = { @Element1 #member }\n\n");
 					break;
 					
@@ -94,7 +96,7 @@ public class XMLPegGenerator extends PegGenerator {
 		int index = this.elementNameMap.get(elementName);
 		if (this.attMap.containsKey(node.get(0).getText())) { // check whether attribute exists
 			sb.append("Element").append(index)
-					.append(" = { _* '<").append(elementName)
+					.append(" = { '<").append(elementName)
 					.append("\' _* @Attribute").append(index)
 					.append(" _* ( '/>' / '>' _* @Members").append(index);
 			if (node.size() == 3) { // when regular expression exists
@@ -103,7 +105,7 @@ public class XMLPegGenerator extends PegGenerator {
 			sb.append(" _* '</").append(elementName).append(">' ) _* #element }\n\n");
 		} else {
 				sb.append("Element").append(index)
-						.append(" = { _* '<").append(elementName)
+					.append(" = { '<").append(elementName)
 						.append("\' _* ( '/>' / '>' _* ")
 						.append("(@Members").append(index)
 						.append(")");
