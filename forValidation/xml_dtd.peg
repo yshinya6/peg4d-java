@@ -19,28 +19,49 @@ Dtd
     =  _*  '<!' (Element/Attlist/Entity) '>'  _*
     
 
-Element
-	= _* 'ELEMENT' _* {@ElementName _*  ( '(' @Model (VS @Model)* ')' (@Regex)? / @OtherMember ) #element} _*
+
+
+
+	
 	
 
-Attlist
-	= _* 'ATTLIST' _* {@AttElementName _* (@AttParameter)* #attlist} _*
-	
-	
-Entity
-	= _* 'ENTITY' _* {@EntityName _* ('SYSTEM')? _* @String #entity} _*
 	
 
 
 //for Element
-Model
-	=  _* Member _* 
+//
+//[45]   	elementdecl	   ::=   	'<!ELEMENT' S Name S contentspec S? '>'	[VC: Unique Element Type Declaration]
+//[46]   	contentspec	   ::=   	'EMPTY' | 'ANY' | Mixed | children
+//[47]   	children	   ::=   	(choice | seq) ('?' | '*' | '+')?
+//[48]   	cp	   ::=   	(Name | choice | seq) ('?' | '*' | '+')?
+//[49]   	choice	   ::=   	'(' S? cp ( S? '|' S? cp )+ S? ')'	[VC: Proper Group/PE Nesting]
+//[50]   	seq	   ::=   	'(' S? cp ( S? ',' S? cp )* S? ')'	[VC: Proper Group/PE Nesting]
+
+Element
+	= _* 'ELEMENT' _* {@ElementName _* contentSpec _* #element} _*
+
+contentSpec
+	= @TMember / (@{('EMPTY' / 'ANY') #others })
+	
+
+TMember
+	= { ( ('(' _* @Data _* ')') / @MemberName / @Choice / @Seq) (@Regex)? #member}
 	
 Member
-	= { (@Data/@MemberName) (@Or)? ((VS)? (@Data/@MemberName) (@Or)?)* #member} 
+	= {  (@Data / @MemberName / @Choice / @Seq) (@Regex)? #member}
+
+Choice 
+	= { '(' _* @Member (_* @Or _* @Member)+ _* ')' (@Regex)? #choice}
+
+Seq 
+	= { '(' _* @Member (_* VS _* @Member)* _* ')' (@Regex)? #seq}
+
+	
+//Member
+//	= { (@Data/@MemberName) (@Or)? ((VS)? (@Data/@MemberName) (@Or)?)* #member} 
 	
 Data
-	= { '#PCDATA'  #data}
+	= { '#PCDATA' #data}
 	
 Regex
 	= { ( '*' / '+' / '?') #regex}
@@ -53,32 +74,42 @@ OtherMember
 	
 	
 //for Attlist
-AttParameter
-	= { _* @AttName _* @DataType _* (@Default)? _* #attParameter}
+//AttlistDecl	   ::=   	'<!ATTLIST' S Name AttDef* S? '>'
+//AttDef	   ::=   	S Name S AttType S DefaultDecl
+
+Attlist
+	= _* 'ATTLIST' _* {@AttElementName _* (@AttDef)* #attlist} _*
+
+AttDef
+	= { _* @AttName _* @AttType _* @DefaultDecl _* #attDef}
 	 
-DataType
-	= { (@{'CDATA' #CDATA} 
-		/ @{'IDREF' #IDREF} 
-		/ @{'ID' #ID} 
+AttType
+	= { (@{'CDATA' #CDATA} / tokenized / @Enumerated) #attType }
+
+
+tokenized
+	= 
+		  @{'IDREFS' #IDREFS}		
+		/ @{'IDREF' #IDREF}
+		/ @{'ID' #ID}  
 		/ @{'ENTITY' #ENTITY} 
 		/ @{'ENTITIES' #ENTITIES} 
-		/ @{'NMTOKENS'} 
+		/ @{'NMTOKENS' #NMTOKENS} 
 		/ @{'NMTOKEN' #NMTOKEN} 
-		/ @Enumerated ) #dataType}
-	
+
 Enumerated
-	= { '(' _* @{ NAME #enumMember } _* ( (@Or)  @{ NAME #enumMember } )+   _* ')'  _* #Enum }
+	= { '(' _* @{ NAME #enumMember } _* ( @Or  @{ NAME #enumMember } )+   _* ')'  _* #enum }
 	
-Default
-	= { @DefaultType  _* (@DefaultValue)? #default}
-	
-DefaultType
-	= {('#REQUIRED' / '#IMPLIED' / '#FIXED' / STRING ) #defaultType}	
+DefaultDecl
+	= { ( '#REQUIRED' / '#IMPLIED' / ( (@{'#FIXED' #fixed})? _* @DefaultValue )) #default}
 	
 DefaultValue
 	= {STRING #defaultValue}
 	
+//for Entity
 
+Entity
+	= _* 'ENTITY' _* {@EntityName _* ('SYSTEM')? _* @String #entity} _*
 
 //Name
 AttName
@@ -91,7 +122,7 @@ AttElementName
 	= {NAME #attElementName}
 	
 MemberName
-	= {@Name (@Regex)? #memberName}
+	= {NAME #memberName}
 	
 EntityName
 	= {NAME #entityName}
@@ -101,10 +132,10 @@ DocTypeName
 	
 
 Name
-	= { [A-Za-z:] ( '-' / [A-Za-z0-9:._])*  #name }
+	= { [A-Za-z:%_] ( '-' / [A-Za-z0-9:._%;])*  #name }
 
 NAME
-	=  [A-Za-z:] ( '-' / [A-Za-z0-9:._])*
+	=  [A-Za-z:%_] ( '-' / [A-Za-z0-9:._%;])*
 
 String
     =  '"' { ( !'"' . )*  #string } '"'

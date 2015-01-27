@@ -67,8 +67,9 @@ public class XMLPegGenerator extends PegGenerator {
 		if (!this.entityNameMap.isEmpty()) {
 			sb.append("Chardata = { ( @{ TEXT #text} / entity )* #PCDATA }\n\n");
 			generateEntityList(sb);
+		} else {
+			sb.append("Chardata = { TEXT #PCDATA }\n\n");
 		}
-		sb.append("Chardata = { TEXT #PCDATA }\n\n");
 		for (ParsingObject subnode : node) {
 			switch (subnode.getTag().toString()) {
 				case "docTypeName": // top of DTD
@@ -104,7 +105,7 @@ public class XMLPegGenerator extends PegGenerator {
 				}
 			sb.append(" _* '</").append(elementName).append(">' ) _* #element }\n\n");
 		} else {
-				sb.append("Element").append(index)
+			sb.append("Element").append(index)
 					.append(" = { '<").append(elementName)
 						.append("\' _* ( '/>' / '>' _* ")
 						.append("(@Members").append(index)
@@ -129,7 +130,6 @@ public class XMLPegGenerator extends PegGenerator {
 							.append(members.toString())
 							.append(" } \n\n");
 					break;
-
 				case "others" :
 					sb.append("Members").append(index)
 							.append(" =");
@@ -143,6 +143,48 @@ public class XMLPegGenerator extends PegGenerator {
 		}
 	}
 
+	private final void generateGroupedRule(StringBuilder groupedRule, ParsingObject node) {
+		for (ParsingObject subnode : node) {
+			String tag = subnode.getTag().toString();
+			if (tag.equals("member")) {
+				generateGroupedMemberRule(groupedRule, subnode);
+			}
+			else if (tag.equals("or")) {
+				groupedRule.append(" / ");
+			}
+			else if (tag.equals("regex")) {
+				groupedRule.append(" )").append(subnode.getText());
+				return;
+			}
+		}
+		groupedRule.append(" ) ");
+	}
+
+	private final void generateGroupedMemberRule(StringBuilder sb, ParsingObject node) {
+		for (ParsingObject subnode : node) {
+			switch (subnode.getTag().toString()) {
+				case "memberName" :
+					int index = elementNameMap.get(subnode.getText());
+					if (node.size() == 1) {
+						sb.append(" @Element").append(index);
+					} else if (node.size() == 2) { // when regular expression exists
+						sb.append(" (@Element").append(index).append(")")
+								.append(node.get(1).getText()); // insert regex
+					}
+					break;
+				case "seq" :
+				case "choice" :
+					StringBuilder innerRule = new StringBuilder();
+					generateGroupedRule(innerRule, subnode);
+					sb.append(" ( ").append(innerRule).append(" ");
+					break;
+				case "data" :
+					sb.append(" @Chardata "); //
+					break;
+			}
+		}
+	}
+
 	private final void generateMemberRule(StringBuilder sb, StringBuilder members,
 			ParsingObject node,
 			int index)
@@ -151,17 +193,17 @@ public class XMLPegGenerator extends PegGenerator {
 		for(ParsingObject subnode : node){
 			switch (subnode.getTag().toString()) {
 				case "memberName" :
-					if (subnode.size() == 1) {
+					if (node.size() == 1) {
 						sb.append("Member")
 								.append(index).append("_").append(count)
 								.append(" = { @Element")
-								.append(this.elementNameMap.get(subnode.get(0).getText()))
+								.append(index)
 								.append(" #member}\n\n");
-					} else if (subnode.size() == 2) { // when regular expression exists
+					} else if (node.size() == 2) { // when regular expression exists
 						sb.append("Member")
 								.append(index).append("_").append(count)
 								.append(" = { (@Element")
-								.append(this.elementNameMap.get(subnode.get(0).getText()))
+								.append(index)
 								.append(")")
 								.append(subnode.get(1).getText()) // insert regex
 								.append(" #member}\n\n");
@@ -169,18 +211,24 @@ public class XMLPegGenerator extends PegGenerator {
 					members.append(" @Member").append(index).append("_").append(count);
 					count++;
 					break;
-
-				case "or" :
-					members.append(" / ");
+				case "seq" :
+				case "choice" :
+					StringBuilder groupedRule = new StringBuilder();
+					generateGroupedRule(groupedRule, subnode);
+					sb.append("Member")
+							.append(index).append("_").append(count)
+							.append(" = { (").append(groupedRule).append(" #member }\n\n");
+					members.append(" @Member").append(index).append("_").append(count);
 					break;
 
 				case "data" :
-					if (node.size() > 1) {
+					if (node.size() == 1) {
 						sb.append("Member").append(index).append("_").append(count)
-								.append(" = { (@Chardata) #data }\n\n");
-					} else {
+								.append(" = { (@Chardata)? #data }\n\n"); //to solve priority problems
+					} else if (node.size() == 2) {
 						sb.append("Member").append(index).append("_").append(count)
-								.append(" = { (@Chardata)? #data }\n\n");
+								.append(" = { (@Chardata)").append(node.get(1).getText())
+								.append(" #data }\n\n");
 					}
 					members.append(" @Member").append(index).append("_").append(count);
 					count++;
@@ -191,35 +239,35 @@ public class XMLPegGenerator extends PegGenerator {
 
 	private final void generateAttributeRule(StringBuilder sb, ParsingObject node) {
 		int index = elementNameMap.get(node.get(0).getText());
-		generateAttParameterRule(sb, node, index);
+		generateAttDefRule(sb, node, index);
 		sb.append("Attribute").append(index).append(" ={");
 		for (int i = 0; i <= node.size() - 2; i++) {
-			if (node.get(i + 1).get(2).get(0).getText().equals("#IMPLIED")) {
-				sb.append("  (@AttParameter")
+			if (node.get(i + 1).get(2).getText().equals("#IMPLIED")) {
+				sb.append(" (@AttDef")
 						.append(index).append("_").append(i)
 						.append(")? _* ");
 			} else {
-				sb.append("  @AttParameter").append(index).append("_").append(i)
+				sb.append(" @AttDef").append(index).append("_").append(i)
 						.append(" _* ");
 			}
 		}
 		sb.append("#attribute }\n\n");
 	}
 
-	private final void generateAttParameterRule(StringBuilder sb, ParsingObject node, int index) {
+	private final void generateAttDefRule(StringBuilder sb, ParsingObject node, int index) {
 		int count = 0;
 		for (ParsingObject subnode : node) {
-			if (subnode.getTag().toString().equals("attParameter")) {
+			if (subnode.getTag().toString().equals("attDef")) {
 
 				String attName = subnode.get(0).getText();
-				String dataType = subnode.get(1).getText();
-				String defaultValue = subnode.get(2).get(0).getText();
+				String attType = subnode.get(1).get(0).getTag().toString();
+				String defaultValue = subnode.get(2).getText();
 
-				sb.append("AttParameter").append(index).append("_").append(count)
+				sb.append("AttDef").append(index).append("_").append(count)
 						.append(" = { '").append(attName);
 
 				if (defaultValue.equals("#IMPLIED")) {
-					if (dataType.equals("NMTOKEN")) {
+					if (attType.equals("NMTOKEN")) {
 						sb.append("' '=' (NMTOKEN)? #attPara } \n\n");
 					} else {
 						sb.append("' '=' (STRING)? #attPara } \n\n");
@@ -231,11 +279,11 @@ public class XMLPegGenerator extends PegGenerator {
 					sb.append("\" #FIXED } \n\n");
 				}
 				else { // #REQUIRED or Enumerated or only "defaultValue"
-					switch (dataType) {
+					switch (attType) {
 						case "NMTOKEN" :
 							sb.append("' '=' NMTOKEN #attPara } \n\n");
 							break;
-						case "Enum" :
+						case "enum" :
 							sb.append("' '=' ( ");
 							generateEnumMembers(sb, subnode.get(1).get(0));
 							sb.append(" ) #attPara } \n\n");
@@ -257,7 +305,7 @@ public class XMLPegGenerator extends PegGenerator {
 					sb.append("'\"").append(subnode.getText()).append("\"'");
 					break;
 				case "or" :
-					sb.append(subnode.getText());
+					sb.append(subnode.getText()); // insert "/" 
 					break;
 			}
 		}

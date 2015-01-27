@@ -103,11 +103,11 @@ public class XMLValidator {
 				this.errorMessage += "Failure Tag       : <"
 						+ source.substring((int) startPos, (int) endPos)
 						+ "> \n";
-				this.errorMessage += "Failure Character : "
-						+ source.substring((int) startPos, (int) fpos)
-						+ "\'"
-						+ source.charAt((int) fpos) + "\'"
-						+ source.substring((int) fpos + 1, (int) endPos);
+				this.errorMessage += "Failure Character : ";
+//						+ source.substring((int) startPos, (int) fpos)
+//						+ "\'"
+//						+ source.charAt((int) fpos) + "\'"
+//						+ source.substring((int) fpos + 1, (int) endPos);
 
 				break;
 			} else if (source.charAt((int) pos) == '<') {
