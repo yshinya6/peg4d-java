@@ -35,6 +35,9 @@ STRING
 NMTOKEN
 	= '"' NAME '"'
 
+IDTOKEN
+	= [A-Za-z0-9:._]+ / <isa IDLIST>
+
 
     
     

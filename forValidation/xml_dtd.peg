@@ -41,10 +41,10 @@ Element
 	= _* 'ELEMENT' _* {@ElementName _* contentSpec _* #element} _*
 
 contentSpec
-	= @TMember / (@{('EMPTY' / 'ANY') #others })
+	=  (@{('EMPTY' / 'ANY') #others } / @TopMember )
 	
 
-TMember
+TopMember
 	= { ( ('(' _* @Data _* ')') / @MemberName / @Choice / @Seq) (@Regex)? #member}
 	
 Member
@@ -101,12 +101,20 @@ Enumerated
 	= { '(' _* @{ NAME #enumMember } _* ( @Or  @{ NAME #enumMember } )+   _* ')'  _* #enum }
 	
 DefaultDecl
-	= { ( '#REQUIRED' / '#IMPLIED' / ( (@{'#FIXED' #fixed})? _* @DefaultValue )) #default}
+	= { ( @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} / ( (@{'#FIXED' #FIXED})? _* @DefaultValue )) #default}
 	
 DefaultValue
 	= {STRING #defaultValue}
 	
 //for Entity
+
+
+//[70]   	EntityDecl	   ::=   	GEDecl | PEDecl
+//[71]   	GEDecl	   ::=   	'<!ENTITY' S Name S EntityDef S? '>'
+//[72]   	PEDecl	   ::=   	'<!ENTITY' S '%' S Name S PEDef S? '>'
+//[73]   	EntityDef	   ::=   	EntityValue| (ExternalID NDataDecl?)
+//[74]   	PEDef	   ::=   	EntityValue | ExternalID
+
 
 Entity
 	= _* 'ENTITY' _* {@EntityName _* ('SYSTEM')? _* @String #entity} _*
