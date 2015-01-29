@@ -46,6 +46,18 @@ public class XMLValidator {
 		return !xmlContext.hasByteChar();
 	}
 
+	public boolean validateForExperiment() {
+		GrammarFactory xmlGrammarFactory = new GrammarFactory();
+		Grammar genPeg = xmlGrammarFactory.newGrammar("XML", DTDFile); //DTDFile = generatedXML.peg
+		ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
+		ParsingContext xmlContext = new ParsingContext(xmlSource);
+		ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
+		if (xmlContext.hasByteChar()) {
+			setErrorMessage(xmlContext.fpos);
+		}
+		return !xmlContext.hasByteChar();
+	}
+
 	public boolean getResult() {
 		return this.result;
 	}

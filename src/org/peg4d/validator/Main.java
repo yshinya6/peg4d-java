@@ -8,10 +8,12 @@ public class Main {
 	private final static String defaultStartPoint = "Toplevel";
 	private static String Command = null;
 	private static String SchemaFile = null;
+	private static String PegFile = null;
 	private static String FileFormat = null;
 	private static String InputFile = null;
 	private static boolean XMLMode = false;
 	private static boolean JSONMode = false;
+	private static boolean ValidateXMLMode = false;
 
 
 	public final static void main(String[] args) {
@@ -20,6 +22,17 @@ public class Main {
 		if (XMLMode) {
 			XMLValidator validator = new XMLValidator(SchemaFile, InputFile);
 			boolean result = validator.run();
+			if (result) {
+				System.out.println("VALID XML FILE");
+			} else {
+				System.out.println("INVALID XML FILE");
+				System.out.println(validator.getErrorMessage());
+			}
+			System.exit(0);
+		}
+		else if (ValidateXMLMode) {
+			XMLValidator validator = new XMLValidator(PegFile, InputFile);
+			boolean result = validator.validateForExperiment();
 			if (result) {
 				System.out.println("VALID XML FILE");
 			} else {
@@ -46,6 +59,8 @@ public class Main {
 		System.out.println("nez-validator <command> optional files");
 		System.out
 				.println(" <InputFileFormat(XML/JSON)> <SchemaFile(.dtd/JsonSchemaFile)> <InputFile(.XML/.JSON)>      Validation Mode");
+		System.out
+				.println(" --ValidateXml <GeneratedPegFile(.peg)> <InputFile(.xml)>                               For Experiment Command ");
 	}
 
 	private static void parseCommandOption(String[] args) {
@@ -60,7 +75,18 @@ public class Main {
 				if (index <= args.length)
 					InputFile = args[index++];
 			}
- else if ((argument.equals("json") || argument.equals("JSON"))
+			else if ((argument.equals("--ValidateXml") || argument.equals("--validatexml"))
+					&& (index < args.length)) {
+				ValidateXMLMode = true;
+				if (index < args.length) {
+					PegFile = args[index++];
+				}
+				if (index < args.length) {
+					InputFile = args[index++];
+				}
+
+			}
+			else if ((argument.equals("json") || argument.equals("JSON"))
 					&& (index < args.length)) {
 				JSONMode = true;
 				if (index < args.length)
@@ -68,7 +94,7 @@ public class Main {
 				if (index <= args.length)
 					InputFile = args[index++];
 			}
- else {
+			else {
 				showUsage("Error!!");
 				Main._Exit(0, "Unknown Option: " + argument);
 			}

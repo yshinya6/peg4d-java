@@ -1,6 +1,6 @@
 <project name="libbun" default="jar">
 	<!-- directory / file definition -->
-	<property name="BinaryName" value="nez-0.9.1" />
+	<property name="BinaryName" value="nez-DTDValidator" />
 	<property name="source_dir" value="src" />
 	<property name="build_dir"  value="build" />
 	<property name="root_dir"   value="." />
@@ -43,7 +43,7 @@
 			<fileset dir="." includes="lib/**" />
 			<exclude name="**/*Test.class" />
 			<manifest>
-				<attribute name="Main-Class" value="org.peg4d.Main" />
+				<attribute name="Main-Class" value="org.peg4d.validator.Main" />
 			</manifest>
 			<zipfileset src="${jline_jar}" />
 			<zipfileset src="${asm_jar}" />
