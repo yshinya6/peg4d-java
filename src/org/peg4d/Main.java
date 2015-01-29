@@ -7,14 +7,14 @@ import java.util.Map;
 
 import org.peg4d.data.RelationBuilder;
 import org.peg4d.jvm.JavaByteCodeGenerator;
-import org.peg4d.pegcode.PegVMByteCodeGenerator;
 import org.peg4d.pegcode.GrammarFormatter;
-import org.peg4d.writer.ParsingObjectWriter;
-import org.peg4d.writer.ParsingWriter;
-import org.peg4d.writer.TagWriter;
+import org.peg4d.pegcode.PegVMByteCodeGenerator;
 import org.peg4d.regex.RegexObject;
 import org.peg4d.regex.RegexObjectConverter;
 import org.peg4d.regex.RegexPegGenerator;
+import org.peg4d.writer.ParsingObjectWriter;
+import org.peg4d.writer.ParsingWriter;
+import org.peg4d.writer.TagWriter;
 
 public class Main {
 	public final static String  ProgName  = "Nez";
@@ -82,7 +82,7 @@ public class Main {
 	public static boolean PegVMByteCodeGeneration = false;
 
 	// -O
-	public static int OptimizationLevel = 2;
+	public static int OptimizationLevel = 3;
 
 	// --log
 	public static NezLogger  Logger = null;

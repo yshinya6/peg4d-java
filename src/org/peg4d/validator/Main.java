@@ -14,6 +14,7 @@ public class Main {
 	private static boolean XMLMode = false;
 	private static boolean JSONMode = false;
 	private static boolean ValidateXMLMode = false;
+	private static boolean CompileMode = false;
 
 
 	public final static void main(String[] args) {
@@ -21,24 +22,23 @@ public class Main {
 		parseCommandOption(args);
 		if (XMLMode) {
 			XMLValidator validator = new XMLValidator(SchemaFile, InputFile);
-			boolean result = validator.run();
-			if (result) {
-				System.out.println("VALID XML FILE");
-			} else {
-				System.out.println("INVALID XML FILE");
-				System.out.println(validator.getErrorMessage());
-			}
+			validator.run();
+			//			if (result) {
+			//				System.out.println("VALID XML FILE");
+			//			} else {
+			//				System.out.println("INVALID XML FILE");
+			//				System.out.println(validator.getErrorMessage());
+			//			}
 			System.exit(0);
 		}
 		else if (ValidateXMLMode) {
 			XMLValidator validator = new XMLValidator(PegFile, InputFile);
-			boolean result = validator.validateForExperiment();
-			if (result) {
-				System.out.println("VALID XML FILE");
-			} else {
-				System.out.println("INVALID XML FILE");
-				System.out.println(validator.getErrorMessage());
-			}
+			validator.validateForExperiment();
+			System.exit(0);
+		}
+		else if (CompileMode) {
+			XMLValidator validator = new XMLValidator(SchemaFile, InputFile);
+			validator.measureCompileTime();
 			System.exit(0);
 		}
 		else if (JSONMode) {
@@ -85,6 +85,16 @@ public class Main {
 					InputFile = args[index++];
 				}
 
+			}
+			else if ((argument.equals("--Compile") || argument.equals("--compile"))
+					&& (index < args.length)) {
+				CompileMode = true;
+				if (index < args.length) {
+					SchemaFile = args[index++];
+				}
+				if (index < args.length) {
+					InputFile = args[index++];
+				}
 			}
 			else if ((argument.equals("json") || argument.equals("JSON"))
 					&& (index < args.length)) {

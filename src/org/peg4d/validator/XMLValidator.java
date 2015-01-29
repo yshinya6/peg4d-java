@@ -27,35 +27,61 @@ public class XMLValidator {
 		this.errorMessage = "";
 	}
 
-	public boolean run() {
-		GrammarFactory dtdGrammarFactory = new GrammarFactory();
-		Grammar peg4d = dtdGrammarFactory.newGrammar("DTD", pegForDTD);
-		ParsingSource dtdSource = ParsingSource.loadSource(DTDFile);
-		ParsingContext dtdContext = new ParsingContext(dtdSource);
-		ParsingObject node = dtdContext.parse(peg4d, "File");
-		XMLPegGenerator gen = new XMLPegGenerator(node);
-		String genPegSource = gen.generatePegFile();
-		GrammarFactory xmlGrammarFactory = new GrammarFactory();
-		Grammar genPeg = xmlGrammarFactory.newGrammar("XML", genPegSource);
-		ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
-		ParsingContext xmlContext = new ParsingContext(xmlSource);
-		ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
-		if (xmlContext.hasByteChar()) {
-			setErrorMessage(xmlContext.fpos);
+	public void run() {
+		long startTime = 0;
+		long endTime = 0;
+		for (int i = 0; i < 10; i++) {
+			startTime = System.currentTimeMillis();
+			GrammarFactory dtdGrammarFactory = new GrammarFactory();
+			Grammar peg4d = dtdGrammarFactory.newGrammar("DTD", pegForDTD);
+			ParsingSource dtdSource = ParsingSource.loadSource(DTDFile);
+			ParsingContext dtdContext = new ParsingContext(dtdSource);
+			ParsingObject node = dtdContext.parse(peg4d, "File");
+			XMLPegGenerator gen = new XMLPegGenerator(node);
+			String genPegSource = gen.generatePegFile();
+			GrammarFactory xmlGrammarFactory = new GrammarFactory();
+			Grammar genPeg = xmlGrammarFactory.newGrammar("XML", genPegSource);
+			ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
+			ParsingContext xmlContext = new ParsingContext(xmlSource);
+			ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
+			endTime = System.currentTimeMillis();
+			System.out.println(endTime - startTime + "[ms]");
 		}
-		return !xmlContext.hasByteChar();
+		//		if (xmlContext.hasByteChar()) {
+		//			setErrorMessage(xmlContext.fpos);
+		//		}
+		//		return !xmlContext.hasByteChar();
 	}
 
-	public boolean validateForExperiment() {
+	public void validateForExperiment() {
+		long startTime = 0;
+		long endTime = 0;
+		for (int i = 0; i < 21; i++) {
 		GrammarFactory xmlGrammarFactory = new GrammarFactory();
 		Grammar genPeg = xmlGrammarFactory.newGrammar("XML", DTDFile); //DTDFile = generatedXML.peg
-		ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
-		ParsingContext xmlContext = new ParsingContext(xmlSource);
-		ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
-		if (xmlContext.hasByteChar()) {
-			setErrorMessage(xmlContext.fpos);
+			ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
+			ParsingContext xmlContext = new ParsingContext(xmlSource);
+			startTime = System.currentTimeMillis();
+			ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
+			endTime = System.currentTimeMillis();
+			System.out.println(endTime - startTime + "[ms]");
 		}
-		return !xmlContext.hasByteChar();
+	}
+	public void measureCompileTime() {
+		long startTime = 0;
+		long endTime = 0;
+		for (int i = 0; i < 21; i++) {
+			startTime = System.currentTimeMillis();
+			GrammarFactory dtdGrammarFactory = new GrammarFactory();
+			Grammar peg4d = dtdGrammarFactory.newGrammar("DTD", pegForDTD);
+			ParsingSource dtdSource = ParsingSource.loadSource(DTDFile);
+			ParsingContext dtdContext = new ParsingContext(dtdSource);
+			ParsingObject node = dtdContext.parse(peg4d, "File");
+			XMLPegGenerator gen = new XMLPegGenerator(node);
+			String genPegSource = gen.generatePegFile();
+			endTime = System.currentTimeMillis();
+			System.out.println(endTime - startTime + "[ms]");
+		}
 	}
 
 	public boolean getResult() {
