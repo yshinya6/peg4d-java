@@ -6,15 +6,11 @@ import org.peg4d.ParsingObject;
 
 public class Main {
 	private final static String defaultStartPoint = "Toplevel";
-	private static String Command = null;
 	private static String SchemaFile = null;
-	private static String PegFile = null;
-	private static String FileFormat = null;
 	private static String InputFile = null;
 	private static boolean XMLMode = false;
 	private static boolean JSONMode = false;
-	private static boolean ValidateXMLMode = false;
-	private static boolean CompileMode = false;
+	private static boolean BenchmarkXML = false;
 
 
 	public final static void main(String[] args) {
@@ -22,23 +18,18 @@ public class Main {
 		parseCommandOption(args);
 		if (XMLMode) {
 			XMLValidator validator = new XMLValidator(SchemaFile, InputFile);
-			validator.run();
-			//			if (result) {
-			//				System.out.println("VALID XML FILE");
-			//			} else {
-			//				System.out.println("INVALID XML FILE");
-			//				System.out.println(validator.getErrorMessage());
-			//			}
+			boolean result = validator.run();
+			if (result) {
+				System.out.println("VALID XML FILE");
+			} else {
+				System.out.println("INVALID XML FILE");
+				System.out.println(validator.getErrorMessage());
+			}
 			System.exit(0);
 		}
-		else if (ValidateXMLMode) {
-			XMLValidator validator = new XMLValidator(PegFile, InputFile);
-			validator.validateForExperiment();
-			System.exit(0);
-		}
-		else if (CompileMode) {
+		else if (BenchmarkXML) {
 			XMLValidator validator = new XMLValidator(SchemaFile, InputFile);
-			validator.measureCompileTime();
+			validator.bench();
 			System.exit(0);
 		}
 		else if (JSONMode) {
@@ -56,11 +47,11 @@ public class Main {
 
 	final static void showUsage(String Message) {
 		System.out.println(Message);
-		System.out.println("nez-validator <command> optional files");
+		System.out.println("nez-validator <command> optional files\n");
 		System.out
-				.println(" <InputFileFormat(XML/JSON)> <SchemaFile(.dtd/JsonSchemaFile)> <InputFile(.XML/.JSON)>      Validation Mode");
+				.println("Converting Schema to PEGs & Validation Mode : <InputFileFormat(--XML/--JSON)> <SchemaFile(.dtd/JsonSchemaFile)> <InputFile(.XML/.JSON)>\n");
 		System.out
-				.println(" --ValidateXml <GeneratedPegFile(.peg)> <InputFile(.xml)>                               For Experiment Command ");
+				.println("                             Benchmark Mode : --Bench <DTDFilePath> <InputXMLFilePath>\n\n");
 	}
 
 	private static void parseCommandOption(String[] args) {
@@ -68,35 +59,22 @@ public class Main {
 		while (index < args.length) {
 			String argument = args[index];
 			index++;
-			if ((argument.equals("xml") || argument.equals("XML")) && (index < args.length)) {
+			if ((argument.equals("--xml") || argument.equals("--XML")) && (index < args.length)) {
 				XMLMode = true;
 				if (index < args.length)
 					SchemaFile = args[index++];
 				if (index <= args.length)
 					InputFile = args[index++];
 			}
-			else if ((argument.equals("--ValidateXml") || argument.equals("--validatexml"))
+			else if ((argument.equals("--bench") || argument.equals("--Bench"))
 					&& (index < args.length)) {
-				ValidateXMLMode = true;
-				if (index < args.length) {
-					PegFile = args[index++];
-				}
-				if (index < args.length) {
-					InputFile = args[index++];
-				}
-
-			}
-			else if ((argument.equals("--Compile") || argument.equals("--compile"))
-					&& (index < args.length)) {
-				CompileMode = true;
-				if (index < args.length) {
+				BenchmarkXML = true;
+				if (index < args.length)
 					SchemaFile = args[index++];
-				}
-				if (index < args.length) {
+				if (index <= args.length)
 					InputFile = args[index++];
-				}
 			}
-			else if ((argument.equals("json") || argument.equals("JSON"))
+			else if ((argument.equals("--json") || argument.equals("--JSON"))
 					&& (index < args.length)) {
 				JSONMode = true;
 				if (index < args.length)
@@ -106,7 +84,7 @@ public class Main {
 			}
 			else {
 				showUsage("Error!!");
-				Main._Exit(0, "Unknown Option: " + argument);
+				Main._Exit(0, "Unknown Option or Command: " + argument);
 			}
 		}
 	}
