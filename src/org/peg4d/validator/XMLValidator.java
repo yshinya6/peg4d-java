@@ -63,7 +63,6 @@ public class XMLValidator {
 			Grammar genPeg = xmlGrammarFactory.newGrammar("XML", genPegSource);
 			ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
 			ParsingContext xmlContext = new ParsingContext(xmlSource);
-			MemoizationManager.NoMemo = true;
 			xmlContext.match(genPeg, "File", new MemoizationManager());
 			endTime = System.currentTimeMillis();
 			System.out.println(endTime - startTime + "[ms]");

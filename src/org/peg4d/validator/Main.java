@@ -1,5 +1,6 @@
 package org.peg4d.validator;
 
+import org.peg4d.MemoizationManager;
 import org.peg4d.ParsingObject;
 
 
@@ -81,6 +82,26 @@ public class Main {
 					SchemaFile = args[index++];
 				if (index <= args.length)
 					InputFile = args[index++];
+			}
+			else if ((argument.startsWith("--memo"))) {
+				if (argument.equals("--memo:none")) {
+					MemoizationManager.NoMemo = true;
+				}
+				else if (argument.equals("--memo:packrat")) {
+					MemoizationManager.PackratParsing = true;
+				}
+				else if (argument.equals("--memo:window")) {
+					MemoizationManager.SlidingWindowParsing = true;
+				}
+				else if (argument.equals("--memo:slide")) {
+					MemoizationManager.SlidingLinkedParsing = true;
+				}
+				else if (argument.equals("--memo:notrace")) {
+					MemoizationManager.Tracing = false;
+				}
+				else {
+					showUsage("unknown option: " + argument);
+				}
 			}
 			else {
 				showUsage("Error!!");
