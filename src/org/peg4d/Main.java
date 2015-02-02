@@ -332,7 +332,7 @@ public class Main {
 				context.match(peg, StartingPoint, new MemoizationManager());
 				long t2 = System.currentTimeMillis();
 				long t = t2 - t1;
-				Main.printVerbose("ErapsedTime", "" + t + "ms");
+				System.out.println("ErapsedTime : " + t + "ms");
 				if(t < bestTime) {
 					bestTime = t;
 				}

@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import org.peg4d.Grammar;
 import org.peg4d.GrammarFactory;
 import org.peg4d.Main;
+import org.peg4d.MemoizationManager;
 import org.peg4d.ParsingContext;
 import org.peg4d.ParsingObject;
 import org.peg4d.ParsingSource;
@@ -39,7 +40,7 @@ public class XMLValidator {
 		Grammar genPeg = xmlGrammarFactory.newGrammar("XML", genPegSource);
 		ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
 		ParsingContext xmlContext = new ParsingContext(xmlSource);
-		ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
+		xmlContext.match(genPeg, "File", new MemoizationManager());
 		if (xmlContext.hasByteChar()) {
 			setErrorMessage(xmlContext.fpos);
 		}
@@ -62,7 +63,8 @@ public class XMLValidator {
 			Grammar genPeg = xmlGrammarFactory.newGrammar("XML", genPegSource);
 			ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
 			ParsingContext xmlContext = new ParsingContext(xmlSource);
-			ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
+			MemoizationManager.NoMemo = true;
+			xmlContext.match(genPeg, "File", new MemoizationManager());
 			endTime = System.currentTimeMillis();
 			System.out.println(endTime - startTime + "[ms]");
 		}
