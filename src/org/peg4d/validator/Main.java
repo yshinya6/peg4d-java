@@ -12,6 +12,7 @@ public class Main {
 	private static boolean XMLMode = false;
 	private static boolean JSONMode = false;
 	private static boolean BenchmarkXML = false;
+	public static boolean IgnoreRequired = false;
 
 
 	public final static void main(String[] args) {
