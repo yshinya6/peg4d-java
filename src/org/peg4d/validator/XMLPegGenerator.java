@@ -342,18 +342,25 @@ public class XMLPegGenerator extends PegGenerator {
 		int[] reqRuleList = extractRequiredRule(attlist);
 		int maxRuleLength = attlist.length;
 		int minRuleLength = reqRuleList.length;
-		generatePermutaitonAttributeRule(sb, reqRuleList, index); //generate minimum length rule(not mixed choice)
+		//		generatePermutaitonAttributeRule(sb, reqRuleList, index); //generate minimum length rule(not mixed choice)
 		for (int ruleLength = minRuleLength + 1; ruleLength < maxRuleLength; ruleLength++) {
 			for (int currentHeadNum = 0; currentHeadNum < maxRuleLength; currentHeadNum++) { //先頭のルール番号を決定する
 				int[] otherList = extractOtherNum(currentHeadNum, maxRuleLength); // 残ったルール番号を元のリストから抽出する
 				int[] extractedReqList = extractRequiredRule(otherList);
 				int[] extractedImpList = extractImpliedRule(otherList);
 				int numOfImpliedRule = ruleLength - (extractedReqList.length + 1);
-				if (numOfImpliedRule == 1) {
+				if (numOfImpliedRule == 0 && extractedReqList.length > 0) {
+					sb.append(" (@AttDef").append(index).append("_").append(currentHeadNum);
+					generatePermutaitonAttributeRule(sb, extractedReqList, index);
+					sb.deleteCharAt(sb.length() - 1); //FIXME
+					sb.append(") /");
+				}
+				else if (numOfImpliedRule == 1) {
 					StringBuilder impliedRule = new StringBuilder();
 					impliedRule.append("(");
 					for (int i : extractedImpList) {
-						impliedRule.append(" @AttDef").append("_").append(i).append(" /");
+						impliedRule.append(" @AttDef").append(index).append("_").append(i)
+								.append(" /");
 					}
 					impliedRule.deleteCharAt(impliedRule.length() - 1); //delete "/"
 					impliedRule.append(")");
