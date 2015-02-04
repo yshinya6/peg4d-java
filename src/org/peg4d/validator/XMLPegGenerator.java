@@ -240,7 +240,6 @@ public class XMLPegGenerator extends PegGenerator {
 			generatePermutaitonAttributeRule(sb, attList, index);
 			sb.append("\n");
 			if (!impliedList.isEmpty()) {
-				sb.append("/ ");
 				generateImpliedRule(sb, attList, index);
 			}
 		}
@@ -277,7 +276,6 @@ public class XMLPegGenerator extends PegGenerator {
 		if (impliedListLength == 1) { //impliedで宣言されているルール数が1のとき
 			int[] requiredList = extractRequiredRule(attlist);
 			generatePermutaitonAttributeRule(sb, requiredList, index); //requiredルールのみの順列を生成する
-			sb.deleteCharAt(sb.length() - 1);
 		}
 		else if ((impliedListLength > 1) && (impliedListLength < totalRuleLength)) { //impliedルール数が2以上ルール総数未満
 			generateMixedPermRule(sb, attlist, index);
@@ -287,29 +285,32 @@ public class XMLPegGenerator extends PegGenerator {
 		}
 	}
 
-	private final int[] extractRequiredRule(int[] attlist) {
-		int[] target = new int[attlist.length - impliedList.size()];
-		if (target.length == 0)
-			return target;
+	private final int[] extractRequiredRule(int[] attlist) { //FIXME
+		int[] buf = new int[20];
 		int arrIndex = 0;
-		for (int requiredNum : attlist) {
-			if (!impliedList.contains(requiredNum)) {
-				target[arrIndex++] = requiredNum;
+		for (int impliedNum : attlist) {
+			if (!impliedList.contains(impliedNum)) {
+				buf[arrIndex++] = impliedNum;
 			}
+		}
+		int[] target = new int[arrIndex];
+		for (int i = 0; i < arrIndex; i++) {
+			target[i] = buf[i];
 		}
 		return target;
 	}
 
-	private final int[] extractImpliedRule(int[] attlist) {
-		int[] target = new int[attlist.length - impliedList.size()];
-		if (target.length == 0)
-			return target;
-
+	private final int[] extractImpliedRule(int[] attlist) { //FIXME
+		int[] buf = new int[20];
 		int arrIndex = 0;
 		for (int impliedNum : attlist) {
 			if (impliedList.contains(impliedNum)) {
-				target[arrIndex++] = impliedNum;
+				buf[arrIndex++] = impliedNum;
 			}
+		}
+		int[] target = new int[arrIndex];
+		for (int i = 0; i < arrIndex; i++) {
+			target[i] = buf[i];
 		}
 		return target;
 	}
@@ -326,13 +327,15 @@ public class XMLPegGenerator extends PegGenerator {
 	}
 
 	private final void generateCombinationAttributeRule(StringBuilder sb,int[] attList ,int totalRuleLength,int index) {
-		for (int numOfRules = totalRuleLength - 1; numOfRules <= 1; numOfRules--) {
+		for (int numOfRules = totalRuleLength - 1; numOfRules >= 1; numOfRules--) {
 			int[][] combRules = Combination.combinationList(attList, numOfRules);
 			for (int lineNum = 0; lineNum < combRules.length; lineNum++) {
 				generatePermutaitonAttributeRule(sb, combRules[lineNum], index);
 			}
-			sb.append(" / ''");
+			sb.append(" /");
 		}
+		sb.deleteCharAt(sb.length() - 1);
+		sb.append("''");
 	}
 
 	private final void generateMixedPermRule(StringBuilder sb, int[] attlist, int index) {
@@ -346,20 +349,19 @@ public class XMLPegGenerator extends PegGenerator {
 				int[] extractedReqList = extractRequiredRule(otherList);
 				int[] extractedImpList = extractImpliedRule(otherList);
 				int numOfImpliedRule = ruleLength - (extractedReqList.length + 1);
-
-				//				if (numOfImpliedRule == 1) {
-				//					StringBuilder impliedRule = new StringBuilder();
-				//					impliedRule.append("(");
-				//					for (int i : extractedImpList) {
-				//						impliedRule.append(" @AttDef").append("_").append(i).append(" /");
-				//					}
-				//					impliedRule.deleteCharAt(impliedRule.length() - 1); //delete "/"
-				//					impliedRule.append(")");
-				//					sb.append(" (@AttDef").append(index).append("_").append(currentHeadNum)
-				//							.append(" _*");
-				//					sb.append(impliedRule);
-				//					sb.append(") /");
-				//				}
+				if (numOfImpliedRule == 1) {
+					StringBuilder impliedRule = new StringBuilder();
+					impliedRule.append("(");
+					for (int i : extractedImpList) {
+						impliedRule.append(" @AttDef").append("_").append(i).append(" /");
+					}
+					impliedRule.deleteCharAt(impliedRule.length() - 1); //delete "/"
+					impliedRule.append(")");
+					sb.append(" (@AttDef").append(index).append("_").append(currentHeadNum)
+							.append(" _*");
+					sb.append(impliedRule);
+					sb.append(") /");
+				}
 				if (numOfImpliedRule >= 2) {
 					sb.append(" (@AttDef").append(index).append("_").append(currentHeadNum)
 							.append(" _* (");
