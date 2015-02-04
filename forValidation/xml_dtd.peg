@@ -57,8 +57,6 @@ Seq
 	= { '(' _* @Member (_* VS _* @Member)* _* ')' (@Regex)? #seq}
 
 	
-//Member
-//	= { (@Data/@MemberName) (@Or)? ((VS)? (@Data/@MemberName) (@Or)?)* #member} 
 	
 Data
 	= { '#PCDATA' #data}
@@ -117,7 +115,10 @@ DefaultValue
 
 
 Entity
-	= _* 'ENTITY' _* {@EntityName _* ('SYSTEM')? _* @String #entity} _*
+	= _* 'ENTITY' _* {@EntityName _* (('SYSTEM')/('PUBLIC' _* '"' PUBLICCHAR* '"'))? _* @String #entity} _*
+
+PUBLICCHAR
+	=  [a-zA-Z0-9] / [-'()+,./:=?;!*#@$_%] / '\x20' / '\xD' / '\xA' 
 
 //Name
 AttName

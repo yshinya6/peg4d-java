@@ -87,7 +87,6 @@ public class XMLPegGenerator extends PegGenerator {
 					sb.append("Element0 = Member0 _* \n\n");
 					sb.append("Member0 = { @E_").append(firstElementName).append(" #member }\n\n"); //set start point
 					break;
-				//E_text
 					
 				case "element":
 					generateElementRule(sb, subnode);
@@ -180,6 +179,8 @@ public class XMLPegGenerator extends PegGenerator {
 	}
 
 	private final void generateGroupedRule(StringBuilder groupedRule, ParsingObject node) {
+		//		StringBuilder grouped = new StringBuilder();
+		//		StringBuilder single = new StringBuilder();
 		for (ParsingObject subnode : node) {
 			String tag = subnode.getTag().toString();
 			if (tag.equals("member")) {
