@@ -15,7 +15,7 @@ import org.peg4d.ParsingObject;
 import org.peg4d.ParsingSource;
 
 public class XMLValidator {
-	private final String pegForDTD = "forValidation/xml_dtd.peg";
+	private final String pegForDTD = "resource/xml_dtd.p4d";
 	private String DTDFile;
 	private String inputXMLFile;
 	private String errorMessage;
@@ -73,35 +73,33 @@ public class XMLValidator {
 		//		return !xmlContext.hasByteChar();
 	}
 
-	public void validateForExperiment() {
-		long startTime = 0;
-		long endTime = 0;
-		for (int i = 0; i < 21; i++) {
-		GrammarFactory xmlGrammarFactory = new GrammarFactory();
-		Grammar genPeg = xmlGrammarFactory.newGrammar("XML", DTDFile); //DTDFile = generatedXML.peg
-			ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
-			ParsingContext xmlContext = new ParsingContext(xmlSource);
-			startTime = System.currentTimeMillis();
-			ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
-			endTime = System.currentTimeMillis();
-			System.out.println(endTime - startTime + "[ms]");
-		}
-	}
+	//	public void validateForExperiment() {
+	//		long startTime = 0;
+	//		long endTime = 0;
+	//		for (int i = 0; i < 21; i++) {
+	//		GrammarFactory xmlGrammarFactory = new GrammarFactory();
+	//		Grammar genPeg = xmlGrammarFactory.newGrammar("XML", DTDFile); //DTDFile = generatedXML.peg
+	//			ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
+	//			ParsingContext xmlContext = new ParsingContext(xmlSource);
+	//			startTime = System.currentTimeMillis();
+	//			ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
+	//			endTime = System.currentTimeMillis();
+	//			System.out.println(endTime - startTime + "[ms]");
+	//		}
+	//	}
 	public void measureCompileTime() {
 		long startTime = 0;
 		long endTime = 0;
-		for (int i = 0; i < 21; i++) {
-			startTime = System.currentTimeMillis();
-			GrammarFactory dtdGrammarFactory = new GrammarFactory();
-			Grammar peg4d = dtdGrammarFactory.newGrammar("DTD", pegForDTD);
-			ParsingSource dtdSource = ParsingSource.loadSource(DTDFile);
-			ParsingContext dtdContext = new ParsingContext(dtdSource);
-			ParsingObject node = dtdContext.parse(peg4d, "File");
-			XMLPegGenerator gen = new XMLPegGenerator(node);
-			String genPegSource = gen.generatePegFile();
-			endTime = System.currentTimeMillis();
-			System.out.println(endTime - startTime + "[ms]");
-		}
+		startTime = System.currentTimeMillis();
+		GrammarFactory dtdGrammarFactory = new GrammarFactory();
+		Grammar peg4d = dtdGrammarFactory.newGrammar("DTD", pegForDTD);
+		ParsingSource dtdSource = ParsingSource.loadSource(DTDFile);
+		ParsingContext dtdContext = new ParsingContext(dtdSource);
+		ParsingObject node = dtdContext.parse(peg4d, "File");
+		XMLPegGenerator gen = new XMLPegGenerator(node);
+		String genPegSource = gen.generatePegFile();
+		endTime = System.currentTimeMillis();
+		System.out.println(endTime - startTime + "[ms]");
 	}
 
 	public boolean getResult() {

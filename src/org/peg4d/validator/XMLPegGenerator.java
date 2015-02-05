@@ -30,11 +30,12 @@ public class XMLPegGenerator extends PegGenerator {
 
 	@Override
 	public String generatePegFile() {
-		StringBuilder sb = loadSource("forValidation/rootXml.peg");
+		StringBuilder sb = loadSource("resource/rootXml.p4d");
+		this.getFirstElementName(this.node);
 		this.getElementName(this.node);
 		this.getEntityName(this.node);
 		this.generate(sb, this.node, 0);
-		String generatedFilePath = "forValidation/generatedXml.peg";
+		String generatedFilePath = "./generatedXml.peg";
 		File newFile = new File(generatedFilePath);
 		try {
 			newFile.createNewFile();
@@ -48,16 +49,20 @@ public class XMLPegGenerator extends PegGenerator {
 		return generatedFilePath;
 	}
 	
+	private final void getFirstElementName(ParsingObject node) {
+		for (ParsingObject subnode : node) {
+			if (subnode.getTag().toString().equals("element")) {
+				this.firstElementName = subnode.get(0).getText();
+				break;
+			}
+		}
+	}
+
 	private final void getElementName(ParsingObject node) {
 		for (int i = 0; i < node.size(); i++) {
 			ParsingObject subnode = node.get(i);
 			String tag = subnode.getTag().toString();
-			if (tag.equals("docTypeName")) {
-				this.elementNameMap.put(subnode.getText(), 0);
-				if (node.get(i + 1).getTag().toString().equals("element")) { // to get first element name
-					firstElementName = node.get(i + 1).get(0).getText();
-				}
-			} else if (tag.equals("attlist")) {
+			if (tag.equals("attlist")) {
 				this.attMap.put(subnode.get(0).getText(), i);
 			} else if (tag.equals("element")) {
 				this.elementNameMap.put(subnode.get(0).getText(), i);
@@ -81,13 +86,9 @@ public class XMLPegGenerator extends PegGenerator {
 		} else {
 			sb.append("PCdata = { TEXT #PCDATA }\n\n");
 		}
+		sb.append("Element0 = ").append(" { @E_").append(firstElementName).append(" #member }\n\n"); //set start point
 		for (ParsingObject subnode : node) {
 			switch (subnode.getTag().toString()) {
-				case "docTypeName": // top of DTD
-					sb.append("Element0 = Member0 _* \n\n");
-					sb.append("Member0 = { @E_").append(firstElementName).append(" #member }\n\n"); //set start point
-					break;
-					
 				case "element":
 					generateElementRule(sb, subnode);
 					break;
@@ -140,9 +141,9 @@ public class XMLPegGenerator extends PegGenerator {
 					sb.append("Member").append(index)
 							.append(" =");
 					if (subnode.getText().equals("EMPTY")) {
-						sb.append(" Empty \n\n");
+						sb.append(" { EMPTY / MISC* #member}\n\n");
 					} else if (subnode.getText().equals("ANY")) {
-						sb.append(" Any \n\n");
+						sb.append(" { ANY / MISC* #member} \n\n");
 					}
 					break;
 			}
@@ -162,7 +163,8 @@ public class XMLPegGenerator extends PegGenerator {
 					generateGroupedRule(groupedRule, subnode);
 					sb.append("Member")
 							.append(index)
-							.append(" = { (").append(groupedRule).append(" #member }\n\n");
+							.append(" = { (").append(groupedRule)
+							.append(" / MISC* #member }\n\n");
 					break;
 				case "data" :
 					if (node.size() == 1) {
@@ -224,6 +226,10 @@ public class XMLPegGenerator extends PegGenerator {
 
 	private final void generateAttributeRule(StringBuilder sb, ParsingObject node) {
 		String elementName = node.get(0).getText();
+		if (!elementNameMap.containsKey(elementName)) {
+			System.out.println("undeclared element : " + elementName);
+			return;
+		}
 		int index = elementNameMap.get(elementName);
 		int attDefSize = node.size() - 1;
 		int[] attList = new int[attDefSize];
@@ -240,6 +246,7 @@ public class XMLPegGenerator extends PegGenerator {
 			generatePermutaitonAttributeRule(sb, attList, index);
 			sb.append("\n");
 			if (!impliedList.isEmpty()) {
+				sb.append(" /");
 				generateImpliedRule(sb, attList, index);
 			}
 		}
@@ -248,9 +255,8 @@ public class XMLPegGenerator extends PegGenerator {
 
 	private final void generatePermutaitonAttributeRule(StringBuilder sb, int[] attList, int index) {
 		int listLength = attList.length;
-		int[] nextList = new int[listLength - 1];
 		if (listLength == 1) {
-			sb.append(" (@AttDef").append(index).append("_").append(attList[0]).append(") /");
+			sb.append(" (@AttDef").append(index).append("_").append(attList[0]).append(")");
 		}
 		else if (listLength == 2) {
 			sb.append(" (@AttDef").append(index).append("_").append(attList[0])
@@ -260,12 +266,15 @@ public class XMLPegGenerator extends PegGenerator {
 					.append(" _* @AttDef").append(index).append("_").append(attList[0])
 					.append(" )");
 		} else {
-			for (int currentHeadNum = 0; currentHeadNum < attList.length; currentHeadNum++) {
-				nextList = extractOtherNum(currentHeadNum, listLength);
-				sb.append(" (@AttDef").append(index).append("_").append(currentHeadNum)
+			int[] nextList = new int[listLength - 1];
+			for (int currentHeadNum = 0; currentHeadNum < listLength; currentHeadNum++) {
+				nextList = extractOtherNum(attList[currentHeadNum], attList);
+				sb.append(" (@AttDef").append(index).append("_").append(attList[currentHeadNum])
 						.append(" _*(");
 				generatePermutaitonAttributeRule(sb, nextList, index);
-				sb.append(")) /");
+				sb.append("))");
+				if (currentHeadNum < listLength - 1)
+					sb.append(" \n\t/");
 			}
 		}
 	}
@@ -279,6 +288,7 @@ public class XMLPegGenerator extends PegGenerator {
 		}
 		else if ((impliedListLength > 1) && (impliedListLength < totalRuleLength)) { //impliedルール数が2以上ルール総数未満
 			generateMixedPermRule(sb, attlist, index);
+			sb.deleteCharAt(sb.length() - 1); //FIXME
 		}
 		else if (impliedListLength == totalRuleLength) { // 全てがimpliedルール
 			generateCombinationAttributeRule(sb, attlist, totalRuleLength, index);
@@ -315,15 +325,27 @@ public class XMLPegGenerator extends PegGenerator {
 		return target;
 	}
 
-	private final int[] extractOtherNum(int headNum, int maxRuleLength) {
-		int[] otherNumList = new int[maxRuleLength - 1];
+	private final int[] extractOtherNum(int headNum, int[] attlist ) {
+//		int[] otherNumList = new int[maxRuleLength - 1];
+//		int arrIndex = 0;
+//		for (int otherNum = 0; otherNum <= otherNumList.length; otherNum++) {
+//			if (otherNum != headNum) {
+//				otherNumList[arrIndex++] = otherNum;
+//			}
+//		}
+//		return otherNumList;
+		int[] buf = new int[20];
 		int arrIndex = 0;
-		for (int otherNum = 0; otherNum <= otherNumList.length; otherNum++) {
-			if (otherNum != headNum) {
-				otherNumList[arrIndex++] = otherNum;
+		for (int otherNum : attlist) {
+			if (!(headNum == otherNum)) {
+				buf[arrIndex++] = otherNum;
 			}
 		}
-		return otherNumList;
+		int[] target = new int[arrIndex];
+		for (int i = 0; i < arrIndex; i++) {
+			target[i] = buf[i];
+		}
+		return target;
 	}
 
 	private final void generateCombinationAttributeRule(StringBuilder sb,int[] attList ,int totalRuleLength,int index) {
@@ -331,10 +353,9 @@ public class XMLPegGenerator extends PegGenerator {
 			int[][] combRules = Combination.combinationList(attList, numOfRules);
 			for (int lineNum = 0; lineNum < combRules.length; lineNum++) {
 				generatePermutaitonAttributeRule(sb, combRules[lineNum], index);
+				sb.append(" /");
 			}
-			sb.append(" /");
 		}
-		sb.deleteCharAt(sb.length() - 1);
 		sb.append("''");
 	}
 
@@ -345,14 +366,14 @@ public class XMLPegGenerator extends PegGenerator {
 		//		generatePermutaitonAttributeRule(sb, reqRuleList, index); //generate minimum length rule(not mixed choice)
 		for (int ruleLength = minRuleLength + 1; ruleLength < maxRuleLength; ruleLength++) {
 			for (int currentHeadNum = 0; currentHeadNum < maxRuleLength; currentHeadNum++) { //先頭のルール番号を決定する
-				int[] otherList = extractOtherNum(currentHeadNum, maxRuleLength); // 残ったルール番号を元のリストから抽出する
+				int[] otherList = extractOtherNum(attlist[currentHeadNum], attlist); // 残ったルール番号を元のリストから抽出する
 				int[] extractedReqList = extractRequiredRule(otherList);
 				int[] extractedImpList = extractImpliedRule(otherList);
 				int numOfImpliedRule = ruleLength - (extractedReqList.length + 1);
 				if (numOfImpliedRule == 0 && extractedReqList.length > 0) {
-					sb.append(" (@AttDef").append(index).append("_").append(currentHeadNum);
+					sb.append(" (@AttDef").append(index).append("_")
+							.append(attlist[currentHeadNum]);
 					generatePermutaitonAttributeRule(sb, extractedReqList, index);
-					sb.deleteCharAt(sb.length() - 1); //FIXME
 					sb.append(") /");
 				}
 				else if (numOfImpliedRule == 1) {
@@ -364,17 +385,20 @@ public class XMLPegGenerator extends PegGenerator {
 					}
 					impliedRule.deleteCharAt(impliedRule.length() - 1); //delete "/"
 					impliedRule.append(")");
-					sb.append(" (@AttDef").append(index).append("_").append(currentHeadNum)
+					sb.append(" (@AttDef").append(index).append("_")
+							.append(attlist[currentHeadNum])
 							.append(" _*");
 					sb.append(impliedRule);
 					sb.append(") /");
 				}
-				if (numOfImpliedRule >= 2) {
-					sb.append(" (@AttDef").append(index).append("_").append(currentHeadNum)
+				else if (numOfImpliedRule >= 2) {
+					sb.append(" (@AttDef").append(index).append("_")
+							.append(attlist[currentHeadNum])
 							.append(" _* (");
 					generateMixedPermRule(sb, otherList, index);
 					sb.append(") /");
 				}
+
 			}
 		}
 	}
@@ -401,8 +425,8 @@ public class XMLPegGenerator extends PegGenerator {
 						break;
 					case "FIXED" :
 						String constValue = subnode.get(2).get(1).getText(); //node must have constant value when #FIXED constraint
-						sb.append("'").append(attName).append("' '=' '\"").append(constValue)
-								.append("\"'");
+						sb.append("'").append(attName).append("' '=' '").append(constValue)
+								.append("'");
 						break;
 					default :
 						generateAttTypedRule(sb, attName, attType, subnode);

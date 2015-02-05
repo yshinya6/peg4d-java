@@ -8,34 +8,34 @@ File
     = Document
 
 Document
-    = MISC* DocType MISC* 
+    = { (MISC* (@Dtd)*  MISC* )+ #doc}
     
     
-DocType
-    = '<!DOCTYPE' _* {@DocTypeName '[' (@Dtd)* #doctype } ']>'
+//DocType
+//    = '<!DOCTYPE' _* {@DocTypeName '[' (@Dtd)* #doctype } ']>'
     
 
 Dtd
-    =  _*  '<!' (Element/Attlist/Entity) '>'  _*
-    
+    = _* ('<!' ((Element/Attlist/Entity/condsect) '>') / MISC)  _*
+
+IGNORESECT
+	= (_* '<!' (![>] .)* '>' _*) / ( (!']' .)*) / MISC
+
+//conditionalSect	   ::=   	includeSect | ignoreSect
+//[62]   	includeSect	   ::=   	'<![' S? 'INCLUDE' S? '[' extSubsetDecl ']]>'	[VC: Proper Conditional Section/PE Nesting]
+//[63]   	ignoreSect	   ::=   	'<![' S? 'IGNORE' S? '[' ignoreSectContents* ']]>'	[VC: Proper Conditional Section/PE Nesting]
+//[64]   	ignoreSectContents	   ::=   	Ignore ('<![' ignoreSectContents ']]>' Ignore)*
+//[65]   	Ignore	   ::=   	Char* - (Char* ('<![' | ']]>') Char*)
 
 
-
-
+condsect
+	= include / IGNORE
 	
+include	
+	= '[' _* 'INCLUDE' _* '[' _* (@Dtd)* _* ']]' _*
 	
-
-	
-
-
-//for Element
-//
-//[45]   	elementdecl	   ::=   	'<!ELEMENT' S Name S contentspec S? '>'	[VC: Unique Element Type Declaration]
-//[46]   	contentspec	   ::=   	'EMPTY' | 'ANY' | Mixed | children
-//[47]   	children	   ::=   	(choice | seq) ('?' | '*' | '+')?
-//[48]   	cp	   ::=   	(Name | choice | seq) ('?' | '*' | '+')?
-//[49]   	choice	   ::=   	'(' S? cp ( S? '|' S? cp )+ S? ')'	[VC: Proper Group/PE Nesting]
-//[50]   	seq	   ::=   	'(' S? cp ( S? ',' S? cp )* S? ')'	[VC: Proper Group/PE Nesting]
+IGNORE
+	= '[' _* 'IGNORE' _* '[' _* IGNORESECT* _* ']]' _*
 
 Element
 	= _* 'ELEMENT' _* {@ElementName _* contentSpec _* #element} _*
@@ -71,10 +71,6 @@ OtherMember
 	= { ('EMPTY' / 'ANY') #others}
 	
 	
-//for Attlist
-//AttlistDecl	   ::=   	'<!ATTLIST' S Name AttDef* S? '>'
-//AttDef	   ::=   	S Name S AttType S DefaultDecl
-
 Attlist
 	= _* 'ATTLIST' _* {@AttElementName _* (@AttDef)* #attlist} _*
 
@@ -84,6 +80,8 @@ AttDef
 AttType
 	= { (@{'CDATA' #CDATA} / tokenized / @Enumerated) #attType }
 
+ATTVAL
+	=('"' (![<&"].)* '"') /  ("\'" (![<&'] .)* "\'")
 
 tokenized
 	= 
@@ -96,29 +94,48 @@ tokenized
 		/ @{'NMTOKEN' #NMTOKEN} 
 
 Enumerated
-	= { '(' _* @{ NAME #enumMember } _* ( @Or  @{ NAME #enumMember } )+   _* ')'  _* #enum }
+	= { '(' _* @{ NAME #enumMember } _* ( @Or  @{ NAME #enumMember } )*   _* ')'  _* #enum }
 	
 DefaultDecl
 	= { ( @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} / ( (@{'#FIXED' #FIXED})? _* @DefaultValue )) #default}
 	
 DefaultValue
-	= {STRING #defaultValue}
+	= {ATTVAL #defaultValue}
 	
-//for Entity
-
-
-//[70]   	EntityDecl	   ::=   	GEDecl | PEDecl
-//[71]   	GEDecl	   ::=   	'<!ENTITY' S Name S EntityDef S? '>'
-//[72]   	PEDecl	   ::=   	'<!ENTITY' S '%' S Name S PEDef S? '>'
-//[73]   	EntityDef	   ::=   	EntityValue| (ExternalID NDataDecl?)
-//[74]   	PEDef	   ::=   	EntityValue | ExternalID
-
 
 Entity
-	= _* 'ENTITY' _* {@EntityName _* (('SYSTEM')/('PUBLIC' _* '"' PUBLICCHAR* '"'))? _* @String #entity} _*
+	= 'ENTITY' _* { (gedecl/pedecl) #entity } _*
 
+gedecl
+	= @EntityName _* EntityDef _*
+
+pedecl
+	= '%' _* @EntityName _* PEDEF _*
+
+EntityDef
+	= { @EntityValue / (EXID NDATADECL?) #entityDef}
+
+PEDEF
+	= STRING / EXID
+
+EntityValue
+	= {'"' (![%&"].)* '"'#entityValue}
+
+EXID 
+	= ('SYSTEM' _* SLITERAL)
+		/ ('PUBLIC' _* PUBIDLITERAL _* SLITERAL)
+
+NDATADECL
+	= _* 'NDATA' _* NAME
+	
+SLITERAL
+	= (  '\'' ( !'\'' . )* '\'') / ( '"' ( !'"' . )* '"')
+
+PUBIDLITERAL
+	= '"' PUBLICCHAR* '"'
+	
 PUBLICCHAR
-	=  [a-zA-Z0-9] / [-'()+,./:=?;!*#@$_%] / '\x20' / '\xD' / '\xA' 
+	=  [a-zA-Z0-9] / [-'()+,./:=?;!*#@$_% ]  / [\xD] / [\xA] 
 
 //Name
 AttName

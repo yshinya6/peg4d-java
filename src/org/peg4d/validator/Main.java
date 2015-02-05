@@ -13,6 +13,7 @@ public class Main {
 	private static boolean JSONMode = false;
 	private static boolean BenchmarkXML = false;
 	public static boolean IgnoreRequired = false;
+	public static boolean CompileMode = false;
 
 
 	public final static void main(String[] args) {
@@ -32,6 +33,11 @@ public class Main {
 		else if (BenchmarkXML) {
 			XMLValidator validator = new XMLValidator(SchemaFile, InputFile);
 			validator.bench();
+			System.exit(0);
+		}
+		else if (CompileMode) {
+			XMLValidator validator = new XMLValidator(SchemaFile, InputFile);
+			validator.measureCompileTime();
 			System.exit(0);
 		}
 		else if (JSONMode) {
@@ -68,13 +74,19 @@ public class Main {
 				if (index <= args.length)
 					InputFile = args[index++];
 			}
-			else if ((argument.equals("--bench") || argument.equals("--Bench"))
+			else if ((argument.equals("--bench"))
 					&& (index < args.length)) {
 				BenchmarkXML = true;
 				if (index < args.length)
 					SchemaFile = args[index++];
 				if (index <= args.length)
 					InputFile = args[index++];
+			}
+			else if ((argument.equals("--compile"))
+					&& (index < args.length)) {
+				CompileMode = true;
+				if (index < args.length)
+					SchemaFile = args[index++];
 			}
 			else if ((argument.equals("--json") || argument.equals("--JSON"))
 					&& (index < args.length)) {

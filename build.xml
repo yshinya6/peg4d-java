@@ -1,6 +1,6 @@
 <project name="libbun" default="jar">
 	<!-- directory / file definition -->
-	<property name="BinaryName" value="nez-DTDValidator" />
+	<property name="BinaryName" value="nez_dtd_validator" />
 	<property name="source_dir" value="src" />
 	<property name="build_dir"  value="build" />
 	<property name="root_dir"   value="." />
