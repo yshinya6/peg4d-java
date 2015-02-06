@@ -11,8 +11,6 @@ Document
     = { (MISC* (@Dtd)*  MISC* )+ #doc}
     
     
-//DocType
-//    = '<!DOCTYPE' _* {@DocTypeName '[' (@Dtd)* #doctype } ']>'
     
 
 Dtd

@@ -391,7 +391,7 @@ public abstract class ParsingExpression extends ParsingMatcher {
 		int result = typeCheckImpl(rule.expr, rule.type, flagMap);
 		if(rule.type == ParsingRule.ObjectRule) {
 			if(result != OperationContext) {
-				rule.report(ReportLevel.warning, "object construction is expected: " + rule);
+				//rule.report(ReportLevel.warning, "object construction is expected: " + rule);
 			}
 		}
 	}

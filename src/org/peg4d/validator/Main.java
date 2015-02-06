@@ -57,9 +57,14 @@ public class Main {
 		System.out.println(Message);
 		System.out.println("<Usage>\n");
 		System.out
-				.println("Converting Schema to PEGs & Validation Mode : --xml <DTDFilePath> <InputXMLFilePath>\n");
+				.println("--xml      <DTDfilename> <XMLfilename>    : Converting Schema to PEGs & Validation Mode \n");
 		System.out
-				.println("                             Benchmark Mode : --bench <DTDFilePath> <InputXMLFilePath>\n\n");
+				.println("--bench    <DTDfilename> <XMLfilename>    : Benchmark Mode : \n");
+		System.out
+				.println("--compile  <DTDfilename>                  : Compile Mode   \n");
+		System.out
+				.println("--memo:x                                  : Memo config (none|packrat|window|slide|notrace) \n");
+
 	}
 
 	private static void parseCommandOption(String[] args) {

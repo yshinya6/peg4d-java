@@ -50,8 +50,14 @@ public class XMLValidator {
 	public void bench() {
 		long startTime = 0;
 		long endTime = 0;
+		long compStartTime = 0;
+		long compENDTime = 0;
+		long validateStartTime = 0;
+		long validateEndTime = 0;
+
 		for (int i = 0; i < 10; i++) {
 			startTime = System.currentTimeMillis();
+			compStartTime = System.currentTimeMillis();
 			GrammarFactory dtdGrammarFactory = new GrammarFactory();
 			Grammar peg4d = dtdGrammarFactory.newGrammar("DTD", pegForDTD);
 			ParsingSource dtdSource = ParsingSource.loadSource(DTDFile);
@@ -59,13 +65,19 @@ public class XMLValidator {
 			ParsingObject node = dtdContext.parse(peg4d, "File");
 			XMLPegGenerator gen = new XMLPegGenerator(node);
 			String genPegSource = gen.generatePegFile();
+			compENDTime = System.currentTimeMillis();
+			validateStartTime = System.currentTimeMillis();
 			GrammarFactory xmlGrammarFactory = new GrammarFactory();
 			Grammar genPeg = xmlGrammarFactory.newGrammar("XML", genPegSource);
 			ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
 			ParsingContext xmlContext = new ParsingContext(xmlSource);
 			xmlContext.match(genPeg, "File", new MemoizationManager());
+			validateEndTime = System.currentTimeMillis();
 			endTime = System.currentTimeMillis();
-			System.out.println(endTime - startTime + "[ms]");
+			System.out.println("Total Time    : " + (endTime - startTime) + " [ms]");
+			System.out.println("Compile Time  : " + (compENDTime - compStartTime) + " [ms]");
+			System.out.println("Validate Time : " + (endTime - startTime) + " [ms]\n");
+
 		}
 		//		if (xmlContext.hasByteChar()) {
 		//			setErrorMessage(xmlContext.fpos);
