@@ -55,11 +55,11 @@ public class Main {
 
 	final static void showUsage(String Message) {
 		System.out.println(Message);
-		System.out.println("nez-validator <command> optional files\n");
+		System.out.println("<Usage>\n");
 		System.out
-				.println("Converting Schema to PEGs & Validation Mode : <InputFileFormat(--XML/--JSON)> <SchemaFile(.dtd/JsonSchemaFile)> <InputFile(.XML/.JSON)>\n");
+				.println("Converting Schema to PEGs & Validation Mode : --xml <DTDFilePath> <InputXMLFilePath>\n");
 		System.out
-				.println("                             Benchmark Mode : --Bench <DTDFilePath> <InputXMLFilePath>\n\n");
+				.println("                             Benchmark Mode : --bench <DTDFilePath> <InputXMLFilePath>\n\n");
 	}
 
 	private static void parseCommandOption(String[] args) {

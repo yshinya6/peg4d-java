@@ -21,13 +21,6 @@ Dtd
 IGNORESECT
 	= (_* '<!' (![>] .)* '>' _*) / ( (!']' .)*) / MISC
 
-//conditionalSect	   ::=   	includeSect | ignoreSect
-//[62]   	includeSect	   ::=   	'<![' S? 'INCLUDE' S? '[' extSubsetDecl ']]>'	[VC: Proper Conditional Section/PE Nesting]
-//[63]   	ignoreSect	   ::=   	'<![' S? 'IGNORE' S? '[' ignoreSectContents* ']]>'	[VC: Proper Conditional Section/PE Nesting]
-//[64]   	ignoreSectContents	   ::=   	Ignore ('<![' ignoreSectContents ']]>' Ignore)*
-//[65]   	Ignore	   ::=   	Char* - (Char* ('<![' | ']]>') Char*)
-
-
 condsect
 	= include / IGNORE
 	

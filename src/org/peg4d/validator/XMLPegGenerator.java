@@ -20,8 +20,9 @@ public class XMLPegGenerator extends PegGenerator {
 	}
 
 	int arrayCount = 0;
-	ArrayList<Integer> impliedList;
 	String firstElementName;
+	ArrayList<Integer> impliedList;
+	ArrayList<Integer> requiredList;
 	Map<String, Integer> elementNameMap = new HashMap<String, Integer>();
 	Map<String, Integer> attMap = new HashMap<String, Integer>();
 	Map<String, Integer> entityNameMap = new HashMap<String, Integer>();
@@ -86,7 +87,8 @@ public class XMLPegGenerator extends PegGenerator {
 		} else {
 			sb.append("PCdata = { TEXT #PCDATA }\n\n");
 		}
-		sb.append("Element0 = ").append(" { @E_").append(firstElementName).append(" #member }\n\n"); //set start point
+		sb.append("Element0 = ").append(" { @El_").append(firstElementName)
+				.append(" #member }\n\n"); //set start point
 		for (ParsingObject subnode : node) {
 			switch (subnode.getTag().toString()) {
 				case "element":
@@ -108,25 +110,25 @@ public class XMLPegGenerator extends PegGenerator {
 		String elementName = node.get(0).getText();
 		int index = this.elementNameMap.get(elementName);
 		if (this.attMap.containsKey(node.get(0).getText())) { // check whether attribute exists
-			sb.append("E_").append(elementName)
+			sb.append("El_").append(elementName)
 					//sb.append("Element").append(index)
 					.append(" = { '<").append(elementName)
-					.append("\' _* @A_").append(elementName)
-					.append(" _* ( '/>' / '>' _* @Member").append(index);
+					.append("\' MISC* @At_").append(elementName)
+					.append(" MISC* ( '/>' / ('>' MISC* @Member").append(index);
 			//			if (node.size() == 3) { // when regular expression exists
 			//					sb.append(node.get(2).getText()); //regex
 			//				}
-			sb.append(" _* '</").append(elementName).append(">' ) _* #element }\n\n");
+			sb.append(" MISC* '</").append(elementName).append(">') ) _* #element }\n\n");
 		} else {
-			sb.append("E_").append(elementName)
+			sb.append("El_").append(elementName)
 					//			sb.append("Element").append(index)
 					.append(" = { '<").append(elementName)
-					.append("\' _* '>' _* ")
+					.append("\' MISC* '>' MISC* ")
 					.append("@Member").append(index);
 			//				if (node.size() == 3) {  // when regular expression exists
 			//					sb.append(node.get(2).getText()); //regex
 			//				}
-			sb.append(" _* '</").append(elementName).append(">' _* #element }\n\n");
+			sb.append(" _* '</").append(elementName).append(">' MISC* #element }\n\n");
 		}
 		generateMemberListRule(sb, node, index);
 	}
@@ -164,7 +166,7 @@ public class XMLPegGenerator extends PegGenerator {
 					sb.append("Member")
 							.append(index)
 							.append(" = { (").append(groupedRule)
-							.append(" / MISC* #member }\n\n");
+							.append("  #member }\n\n");
 					break;
 				case "data" :
 					if (node.size() == 1) {
@@ -205,9 +207,9 @@ public class XMLPegGenerator extends PegGenerator {
 				case "memberName" :
 					String memberName = subnode.getText();
 					if (node.size() == 1) {
-						sb.append(" @E_").append(memberName);
+						sb.append(" @El_").append(memberName);
 					} else if (node.size() == 2) { // when regular expression exists
-						sb.append(" (@E_").append(memberName).append(")")
+						sb.append(" (@El_").append(memberName).append(")")
 								.append(node.get(1).getText()); // insert regex
 					}
 					break;
@@ -233,38 +235,33 @@ public class XMLPegGenerator extends PegGenerator {
 		int index = elementNameMap.get(elementName);
 		int attDefSize = node.size() - 1;
 		int[] attList = new int[attDefSize];
-		impliedList = new ArrayList<Integer>();
 		for (int i = 0; i < attDefSize; i++) {
 			attList[i] = i;
 		}
 		generateAttDefRule(sb, node, index);
-
-		sb.append("A_").append(elementName).append(" = {");
+		sb.append("At_").append(elementName).append(" = {");
 		if (attDefSize == 1) {
-			sb.append(" @AttDef").append(index).append("_0");
+			sb.append(" @AttDef").append(index).append("_0 _* (&'/>' / &'>') ");
 		} else {
 			generatePermutaitonAttributeRule(sb, attList, index);
-			sb.append("\n");
-			if (!impliedList.isEmpty()) {
-				sb.append(" /");
-				generateImpliedRule(sb, attList, index);
-			}
 		}
-		sb.append(" #attribute }\n\n");
+		sb.append(" #attribute} \n\n");
 	}
 
 	private final void generatePermutaitonAttributeRule(StringBuilder sb, int[] attList, int index) {
 		int listLength = attList.length;
-		if (listLength == 1) {
-			sb.append(" (@AttDef").append(index).append("_").append(attList[0]).append(")");
-		}
-		else if (listLength == 2) {
+		//		if (listLength == 1) {
+		//			sb.append(" (@AttDef").append(index).append("_").append(attList[0])
+		//					.append(") (&'/>' / &'>')  ");
+		//		}
+		assert (listLength != 1);
+		if (listLength == 2) {
 			sb.append(" (@AttDef").append(index).append("_").append(attList[0])
 					.append(" _* @AttDef").append(index).append("_").append(attList[1])
-					.append(" ) /")
+					.append(" _* (&'/>' / &'>') ) /")
 					.append(" (@AttDef").append(index).append("_").append(attList[1])
 					.append(" _* @AttDef").append(index).append("_").append(attList[0])
-					.append(" )");
+					.append(" _* (&'/>' / &'>')  ) ");
 		} else {
 			int[] nextList = new int[listLength - 1];
 			for (int currentHeadNum = 0; currentHeadNum < listLength; currentHeadNum++) {
@@ -279,62 +276,84 @@ public class XMLPegGenerator extends PegGenerator {
 		}
 	}
 
-	private final void generateImpliedRule(StringBuilder sb, int[] attlist, int index) {
-		int impliedListLength = impliedList.size();
-		int totalRuleLength = attlist.length;
-		if (impliedListLength == 1) { //impliedで宣言されているルール数が1のとき
-			int[] requiredList = extractRequiredRule(attlist);
-			generatePermutaitonAttributeRule(sb, requiredList, index); //requiredルールのみの順列を生成する
+	private final void generatePermutaitonAttributeRule2(StringBuilder sb, int[] attList, int index) {
+		int listLength = attList.length;
+		if (listLength == 1) {
+			sb.append(" (@AttDef").append(index).append("_").append(attList[0])
+					.append(") (&'/>' / &'>')  ");
 		}
-		else if ((impliedListLength > 1) && (impliedListLength < totalRuleLength)) { //impliedルール数が2以上ルール総数未満
-			generateMixedPermRule(sb, attlist, index);
-			sb.deleteCharAt(sb.length() - 1); //FIXME
-		}
-		else if (impliedListLength == totalRuleLength) { // 全てがimpliedルール
-			generateCombinationAttributeRule(sb, attlist, totalRuleLength, index);
-		}
-	}
-
-	private final int[] extractRequiredRule(int[] attlist) { //FIXME
-		int[] buf = new int[20];
-		int arrIndex = 0;
-		for (int impliedNum : attlist) {
-			if (!impliedList.contains(impliedNum)) {
-				buf[arrIndex++] = impliedNum;
+		else if (listLength == 2) {
+			sb.append(" (@AttDef").append(index).append("_").append(attList[0])
+					.append(" _* @AttDef").append(index).append("_").append(attList[1])
+					.append(" _* (&'/>' / &'>') ) /")
+					.append(" (@AttDef").append(index).append("_").append(attList[1])
+					.append(" _* @AttDef").append(index).append("_").append(attList[0])
+					.append(" _* (&'/>' / &'>')  ) ");
+		} else if (listLength >= 3) {
+			int[] nextList = new int[listLength - 1];
+			for (int currentHeadNum = 0; currentHeadNum < listLength; currentHeadNum++) {
+				nextList = extractOtherNum(attList[currentHeadNum], attList);
+				sb.append(" (@AttDef").append(index).append("_").append(attList[currentHeadNum])
+						.append(" _*(");
+				generatePermutaitonAttributeRule(sb, nextList, index);
+				sb.append("))");
+				if (currentHeadNum < listLength - 1)
+					sb.append(" \n\t/");
 			}
 		}
-		int[] target = new int[arrIndex];
-		for (int i = 0; i < arrIndex; i++) {
-			target[i] = buf[i];
-		}
-		return target;
 	}
 
-	private final int[] extractImpliedRule(int[] attlist) { //FIXME
-		int[] buf = new int[20];
-		int arrIndex = 0;
-		for (int impliedNum : attlist) {
-			if (impliedList.contains(impliedNum)) {
-				buf[arrIndex++] = impliedNum;
-			}
-		}
-		int[] target = new int[arrIndex];
-		for (int i = 0; i < arrIndex; i++) {
-			target[i] = buf[i];
-		}
-		return target;
-	}
+	//	private final void generateImpliedRule(StringBuilder sb, int[] attlist, int index) {
+	//		int impliedListLength = impliedList.size();
+	//		int totalRuleLength = attlist.length;
+	//		if (impliedListLength == 1) { //impliedで宣言されているルール数が1のとき
+	//			int[] requiredList = extractRequiredRule(attlist);
+	//			generatePermutaitonAttributeRule(sb, requiredList, index); //requiredルールのみの順列を生成する
+	//		}
+	//		else if ((impliedListLength > 1) && (impliedListLength < totalRuleLength)) { //impliedルール数が2以上ルール総数未満
+	//			int[] requiredList = extractRequiredRule(attlist);
+	//			generateMixedPermRule(sb, attlist, index);
+	//			//sb.deleteCharAt(sb.length() - 1); //FIXME
+	//			generatePermutaitonAttributeRule(sb, requiredList, index); //requiredのみの順列を生成しておく
+	//
+	//		}
+	//		else if (impliedListLength == totalRuleLength) { // 全てがimpliedルール
+	//			generateCombinationAttributeRule(sb, attlist, totalRuleLength, index);
+	//		}
+	//	}
 
-	private final int[] extractOtherNum(int headNum, int[] attlist ) {
-//		int[] otherNumList = new int[maxRuleLength - 1];
-//		int arrIndex = 0;
-//		for (int otherNum = 0; otherNum <= otherNumList.length; otherNum++) {
-//			if (otherNum != headNum) {
-//				otherNumList[arrIndex++] = otherNum;
-//			}
-//		}
-//		return otherNumList;
-		int[] buf = new int[20];
+	//	private final int[] extractRequiredRule(int[] attlist) { //FIXME
+	//		int[] buf = new int[20];
+	//		int arrIndex = 0;
+	//		for (int impliedNum : attlist) {
+	//			if (!impliedList.contains(impliedNum)) {
+	//				buf[arrIndex++] = impliedNum;
+	//			}
+	//		}
+	//		int[] target = new int[arrIndex];
+	//		for (int i = 0; i < arrIndex; i++) {
+	//			target[i] = buf[i];
+	//		}
+	//		return target;
+	//	}
+
+	//	private final int[] extractImpliedRule(int[] attlist) { //FIXME
+	//		int[] buf = new int[20];
+	//		int arrIndex = 0;
+	//		for (int impliedNum : attlist) {
+	//			if (impliedList.contains(impliedNum)) {
+	//				buf[arrIndex++] = impliedNum;
+	//			}
+	//		}
+	//		int[] target = new int[arrIndex];
+	//		for (int i = 0; i < arrIndex; i++) {
+	//			target[i] = buf[i];
+	//		}
+	//		return target;
+	//	}
+
+	private final int[] extractOtherNum(int headNum, int[] attlist) {
+		int[] buf = new int[50];
 		int arrIndex = 0;
 		for (int otherNum : attlist) {
 			if (!(headNum == otherNum)) {
@@ -348,60 +367,98 @@ public class XMLPegGenerator extends PegGenerator {
 		return target;
 	}
 
-	private final void generateCombinationAttributeRule(StringBuilder sb,int[] attList ,int totalRuleLength,int index) {
-		for (int numOfRules = totalRuleLength - 1; numOfRules >= 1; numOfRules--) {
-			int[][] combRules = Combination.combinationList(attList, numOfRules);
-			for (int lineNum = 0; lineNum < combRules.length; lineNum++) {
-				generatePermutaitonAttributeRule(sb, combRules[lineNum], index);
-				sb.append(" /");
-			}
-		}
-		sb.append("''");
-	}
+	//	private final void generateCombinationAttributeRule(StringBuilder sb,int[] attList ,int totalRuleLength,int index) {
+	//		for (int numOfRules = totalRuleLength - 1; numOfRules >= 1; numOfRules--) {
+	//			int[][] combRules = Combination.combinationList(attList, numOfRules);
+	//			for (int lineNum = 0; lineNum < combRules.length; lineNum++) {
+	//				generatePermutaitonAttributeRule(sb, combRules[lineNum], index);
+	//				sb.append(" /");
+	//			}
+	//		}
+	//		sb.append("''");
+	//	}
 
-	private final void generateMixedPermRule(StringBuilder sb, int[] attlist, int index) {
-		int[] reqRuleList = extractRequiredRule(attlist);
-		int maxRuleLength = attlist.length;
-		int minRuleLength = reqRuleList.length;
-		//		generatePermutaitonAttributeRule(sb, reqRuleList, index); //generate minimum length rule(not mixed choice)
-		for (int ruleLength = minRuleLength + 1; ruleLength < maxRuleLength; ruleLength++) {
-			for (int currentHeadNum = 0; currentHeadNum < maxRuleLength; currentHeadNum++) { //先頭のルール番号を決定する
-				int[] otherList = extractOtherNum(attlist[currentHeadNum], attlist); // 残ったルール番号を元のリストから抽出する
-				int[] extractedReqList = extractRequiredRule(otherList);
-				int[] extractedImpList = extractImpliedRule(otherList);
-				int numOfImpliedRule = ruleLength - (extractedReqList.length + 1);
-				if (numOfImpliedRule == 0 && extractedReqList.length > 0) {
-					sb.append(" (@AttDef").append(index).append("_")
-							.append(attlist[currentHeadNum]);
-					generatePermutaitonAttributeRule(sb, extractedReqList, index);
-					sb.append(") /");
-				}
-				else if (numOfImpliedRule == 1) {
-					StringBuilder impliedRule = new StringBuilder();
-					impliedRule.append("(");
-					for (int i : extractedImpList) {
-						impliedRule.append(" @AttDef").append(index).append("_").append(i)
-								.append(" /");
-					}
-					impliedRule.deleteCharAt(impliedRule.length() - 1); //delete "/"
-					impliedRule.append(")");
-					sb.append(" (@AttDef").append(index).append("_")
-							.append(attlist[currentHeadNum])
-							.append(" _*");
-					sb.append(impliedRule);
-					sb.append(") /");
-				}
-				else if (numOfImpliedRule >= 2) {
-					sb.append(" (@AttDef").append(index).append("_")
-							.append(attlist[currentHeadNum])
-							.append(" _* (");
-					generateMixedPermRule(sb, otherList, index);
-					sb.append(") /");
-				}
-
-			}
-		}
-	}
+	//	private final void generateMixedPermRule(StringBuilder sb, int[] attlist, int index) {
+	//		int[] reqRuleList = extractRequiredRule(attlist);
+	//		int maxRuleLength = attlist.length;
+	//		int minRuleLength = reqRuleList.length;
+	//		if (reqRuleList.length == 0) {
+	//			minRuleLength = 1;
+	//		}
+	//		for (int ruleLength = maxRuleLength - 1; ruleLength >= minRuleLength; ruleLength--) {
+	//			for (int currentHeadNum = 0; currentHeadNum < maxRuleLength; currentHeadNum++) { //先頭のルール番号を決定する
+	//				int[] otherList = extractOtherNum(attlist[currentHeadNum], attlist); // 残ったルール番号を元のリストから抽出する
+	//				int[] extractedReqList = extractRequiredRule(otherList);
+	//				int[] extractedImpList = extractImpliedRule(otherList);
+	//				int numOfImpliedRule = ruleLength - (extractedReqList.length + 1);
+	//				if (numOfImpliedRule == 0 && extractedReqList.length > 0) {
+	//					sb.append(" (@AttDef").append(index).append("_")
+	//							.append(attlist[currentHeadNum]).append(" _*");
+	//					generatePermutaitonAttributeRule(sb, extractedReqList, index);
+	//					sb.append(") ");
+	//					if (ruleLength > minRuleLength) {
+	//						sb.append("/");
+	//					}
+	//				}
+	//				else if (numOfImpliedRule == 1 && extractedReqList.length != 0) {
+	//					StringBuilder impliedRule = new StringBuilder();
+	//					StringBuilder requiredRule = new StringBuilder();
+	//					impliedRule.append("(");
+	//					for (int i : extractedImpList) {
+	//						impliedRule.append(" @AttDef").append(index).append("_").append(i)
+	//								.append(" /");
+	//					}
+	//					impliedRule.deleteCharAt(impliedRule.length() - 1); //delete "/"
+	//					impliedRule.append(")");
+	//					generatePermutaitonAttributeRule(requiredRule, extractedReqList, index);
+	//
+	//					sb.append(" (@AttDef").append(index).append("_")
+	//							.append(attlist[currentHeadNum])
+	//							.append(" _* (");
+	//					sb.append(requiredRule).append(" _* ").append(impliedRule).append(" )) / ");
+	//					sb.append(" (@AttDef").append(index).append("_")
+	//							.append(attlist[currentHeadNum])
+	//							.append(" _* (");
+	//					sb.append(impliedRule).append(" _* ").append(requiredRule);
+	//					sb.append(")) ");
+	//
+	//					if (ruleLength > minRuleLength) {
+	//						sb.append("/");
+	//					}
+	//				}
+	//				else if (numOfImpliedRule == 1) {
+	//					StringBuilder impliedRule = new StringBuilder();
+	//					impliedRule.append("(");
+	//					for (int i : extractedImpList) {
+	//						impliedRule.append(" @AttDef").append(index).append("_").append(i)
+	//								.append(" /");
+	//					}
+	//					impliedRule.deleteCharAt(impliedRule.length() - 1); //delete "/"
+	//					impliedRule.append(")");
+	//					sb.append(" (@AttDef").append(index).append("_")
+	//							.append(attlist[currentHeadNum])
+	//							.append(" _*");
+	//					sb.append(impliedRule);
+	//					sb.append(") ");
+	//
+	//					if (currentHeadNum <= minRuleLength) {
+	//						sb.append("/");
+	//					}
+	//				}
+	//				else if (numOfImpliedRule >= 2) {
+	//					sb.append(" (@AttDef").append(index).append("_")
+	//							.append(attlist[currentHeadNum])
+	//							.append(" _* (");
+	//					generateMixedPermRule(sb, otherList, index);
+	//					sb.append(")) ");
+	//					if (currentHeadNum <= minRuleLength) {
+	//						sb.append("/");
+	//					}
+	//				}
+	//			}
+	//
+	//		}
+	//	}
 
 	private final void generateAttDefRule(StringBuilder sb, ParsingObject node, int index) {
 		int count = 0;
@@ -415,9 +472,10 @@ public class XMLPegGenerator extends PegGenerator {
 				StringBuilder att = new StringBuilder();
 				switch (constraint) {
 					case "IMPLIED" :
+						att.append("(");
 						generateAttTypedRule(att, attName, attType, subnode);
+						att.append(")?");
 						sb.append(att);
-						impliedList.add(count);
 						break;
 					case "REQUIRED" :
 						generateAttTypedRule(att, attName, attType, subnode);
@@ -425,13 +483,13 @@ public class XMLPegGenerator extends PegGenerator {
 						break;
 					case "FIXED" :
 						String constValue = subnode.get(2).get(1).getText(); //node must have constant value when #FIXED constraint
-						sb.append("'").append(attName).append("' '=' '").append(constValue)
-								.append("'");
+						sb.append("( '").append(attName).append("' '=' '").append(constValue)
+								.append("' )?");
 						break;
 					default :
-						generateAttTypedRule(sb, attName, attType, subnode);
+						generateAttTypedRule(att, attName, attType, subnode);
 						String defaultValue = subnode.get(2).get(0).getText();
-						sb.append(att).append(" / `").append(defaultValue).append("`");
+						sb.append("(").append(att).append(" `").append(defaultValue).append("` )?");
 						break;
 				}
 				sb.append(" #attPara } \n\n");
@@ -448,7 +506,7 @@ public class XMLPegGenerator extends PegGenerator {
 				sb.append("STRING");
 				break;
 			case "ID" :
-				sb.append("'\"' <def IDLIST ([A-Za-z0-9:._]+) > '\"' ");
+				sb.append("'\"' <def IDLIST IDTOKEN > '\"' ");
 				break;
 			case "IDREF" :
 				sb.append("'\"' IDTOKEN '\"'");
