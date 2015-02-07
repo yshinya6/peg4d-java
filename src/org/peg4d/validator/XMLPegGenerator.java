@@ -287,8 +287,7 @@ public class XMLPegGenerator extends PegGenerator {
 				nextList = extractOtherNum(attList[currentHeadNum], attList);
 				sb.append(" ( (@AttChoice").append(index).append(")* _* @AttDef").append(index)
 						.append("_").append(attList[currentHeadNum])
-						.append(" _* (@AttChoice").append(index)
-						.append(")* _* (");
+						.append(" _* (");
 				generatePermutaitonAttributeRule(sb, nextList, index);
 				sb.append("))");
 				if (currentHeadNum < listLength - 1)

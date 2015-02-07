@@ -76,7 +76,8 @@ public class XMLValidator {
 			endTime = System.currentTimeMillis();
 			System.out.println("Total Time    : " + (endTime - startTime) + " [ms]");
 			System.out.println("Compile Time  : " + (compENDTime - compStartTime) + " [ms]");
-			System.out.println("Validate Time : " + (endTime - startTime) + " [ms]\n");
+			System.out.println("Validate Time : " + (validateEndTime - validateStartTime)
+					+ " [ms]\n");
 
 		}
 		//		if (xmlContext.hasByteChar()) {
@@ -85,20 +86,6 @@ public class XMLValidator {
 		//		return !xmlContext.hasByteChar();
 	}
 
-	//	public void validateForExperiment() {
-	//		long startTime = 0;
-	//		long endTime = 0;
-	//		for (int i = 0; i < 21; i++) {
-	//		GrammarFactory xmlGrammarFactory = new GrammarFactory();
-	//		Grammar genPeg = xmlGrammarFactory.newGrammar("XML", DTDFile); //DTDFile = generatedXML.peg
-	//			ParsingSource xmlSource = ParsingSource.loadSource(inputXMLFile);
-	//			ParsingContext xmlContext = new ParsingContext(xmlSource);
-	//			startTime = System.currentTimeMillis();
-	//			ParsingObject xmlNode = xmlContext.parse(genPeg, "File");
-	//			endTime = System.currentTimeMillis();
-	//			System.out.println(endTime - startTime + "[ms]");
-	//		}
-	//	}
 	public void measureCompileTime() {
 		long startTime = 0;
 		long endTime = 0;
@@ -112,6 +99,22 @@ public class XMLValidator {
 		String genPegSource = gen.generatePegFile();
 		endTime = System.currentTimeMillis();
 		System.out.println(endTime - startTime + "[ms]");
+	}
+
+	public void analyzeDTD() {
+		GrammarFactory dtdGrammarFactory = new GrammarFactory();
+		Grammar peg4d = dtdGrammarFactory.newGrammar("DTD", pegForDTD);
+		ParsingSource dtdSource = ParsingSource.loadSource(DTDFile);
+		ParsingContext dtdContext = new ParsingContext(dtdSource);
+		ParsingObject node = dtdContext.parse(peg4d, "File");
+		DTDAnalyzer analyzer = new DTDAnalyzer(node);
+		analyzer.analyze();
+		System.out.println("file name       : " + DTDFile);
+		System.out.println("element count   : " + analyzer.elementCount);
+		System.out.println("attlist count   : " + analyzer.attlistCount);
+		System.out.println("entity count    : " + analyzer.entityCount);
+		System.out.println("max attributes  : " + analyzer.maxAttribute);
+		System.out.println("max enumMembers : " + analyzer.maxEnumMeber);
 	}
 
 	public boolean getResult() {
