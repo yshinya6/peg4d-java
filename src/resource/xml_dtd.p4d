@@ -1,0 +1,182 @@
+TopLevel
+    = Document
+    
+Chunk 
+    = Document
+    
+File 
+    = Document
+
+Document
+    = { (PROLOG)? (MISC* (@Dtd)*  MISC* )+ #doc}
+    
+    
+PROLOG
+    =  '<?xml' (_* NAME '=' STRING)*  _* '?>' 
+//DocType
+//    = '<!DOCTYPE' _* {@DocTypeName '[' (@Dtd)* #doctype } ']>'
+    
+
+Dtd
+    = ( ( '<!' (element/attlist/entity/condsect) '>') / MISC*)  _*
+
+IGNORESECT
+	= ( '<!' (![>] .)* '>' _*)/ (_* '%' NAME ';' _*) / ( (!']' .)*) / MISC
+
+condsect
+	= IGNORE / include
+	
+include	
+	= '[' _* ('INCLUDE'/NAME) _* '[' _* (@Dtd)* _*  NAME? _* MISC*  ']]' _*
+	
+IGNORE
+	= '[' _* 'IGNORE' _* '[' _* IGNORESECT* _* ']]' _*
+
+element
+	= 'ELEMENT' _* {@ElementName _* contentSpec _* #element} _*
+
+contentSpec
+	=  (@{('EMPTY' / 'ANY') #others } / @TopMember )
+	
+
+TopMember
+	= { ( ('(' _* @Data _* ')') / @MemberName / @Choice / @Seq) (@Regex)? #member}
+	
+Member
+	= {  (@Data / @MemberName / @Choice / @Seq) (@Regex)? #member}
+
+Choice 
+	= { '(' _* @Member (_* @Or _* @Member)+ _* ')' (@Regex)? #choice}
+
+Seq 
+	= { '(' _* @Member (_* VS _* @Member)* _* ')' (@Regex)? #seq}
+
+Data
+	= { '#PCDATA' #data}
+	
+Regex
+	= { ( '*' / '+' / '?') #regex}
+	
+Or
+	= { _* '|' `/` _* #or}
+	
+OtherMember
+	= { ('EMPTY' / 'ANY') #others}
+	
+	
+attlist
+	= 'ATTLIST' _* {@AttElementName _* (@AttDef)* #attlist} _*
+
+AttDef
+	= { @AttName _* @AttType _* @DefaultDecl _* #attDef}
+	 
+AttType
+	= { (@{'CDATA' #CDATA} / tokenized / @Enumerated) #attType }
+
+ATTVAL
+	=('"' (![<&"].)* '"') /  ("\'" (![<&'] .)* "\'")
+
+tokenized
+	= 
+		  @{'IDREFS' #IDREFS}		
+		/ @{'IDREF' #IDREF}
+		/ @{'ID' #ID}  
+		/ @{'ENTITY' #ENTITY} 
+		/ @{'ENTITIES' #ENTITIES} 
+		/ @{'NMTOKENS' #NMTOKENS} 
+		/ @{'NMTOKEN' #NMTOKEN} 
+
+Enumerated
+	= { '(' _* @{ NAME #enumMember } _* ( @Or  @{ NAME #enumMember } )*   _* ')'  _* #enum }
+	
+DefaultDecl
+	= { ( @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} / ( (@{'#FIXED' #FIXED})? _* @DefaultValue )) #default}
+	
+DefaultValue
+	= {ATTVAL #defaultValue}
+	
+
+entity
+	= 'ENTITY' _*  (gedecl/pedecl) _*
+
+gedecl
+	= { @EntityName _* entitydef _* #entity}
+
+pedecl
+	= '%' _* @EntityName _* PEDEF _*
+
+entitydef
+	=  @EntityValue / (EXID NDATADECL?)
+
+PEDEF
+	= STRING / EXID
+
+EntityValue
+	= {'"' (![	"].)* '"'#entityValue}
+
+EXID 
+	= ('SYSTEM' _* SLITERAL)
+		/ ('PUBLIC' _* PUBIDLITERAL _* SLITERAL)
+
+NDATADECL
+	= 'NDATA' _* NAME
+	
+SLITERAL
+	= (  '\'' ( !'\'' . )* '\'') / ( '"' ( !'"' . )* '"')
+
+PUBIDLITERAL
+	= '"' PUBLICCHAR* '"'
+	
+PUBLICCHAR
+	=  [a-zA-Z0-9] / [-'()+,./:=?;!*#@$_% ]  / [\xD] / [\xA] 
+
+//Name
+AttName
+	= {NAME #attName}
+	
+ElementName
+	= {NAME #elementName}
+	
+AttElementName
+	= {NAME #attElementName}
+	
+MemberName
+	= {NAME #memberName}
+	
+EntityName
+	= {NAME #entityName}
+	
+DocTypeName
+	= {NAME #docTypeName}
+	
+
+Name
+	= { [A-Za-z:%_] ([-A-Za-z0-9:._%;])*  #name }
+
+NAME
+	=  [A-Za-z:%_] ([-A-Za-z0-9:._%;])*
+
+String
+    =  '"' { ( !'"' . )*  #string } '"'
+    
+STRING
+	=  '"' ( !'"' . )* '"'
+    
+
+
+//Spacing etc
+
+
+MISC
+    = COMMENT / _+
+    
+
+COMMENT
+    = '<!--' (!'-->' . )* '-->'
+    
+    
+VS
+	= _* ',' _*
+	
+
+_ = [ \t\r\n]

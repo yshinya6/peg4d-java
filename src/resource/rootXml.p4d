@@ -1,0 +1,95 @@
+TopLevel
+    = Document
+
+Chunk 
+	= Document
+
+File
+	= Document
+    
+
+Document
+    = { (@Prolog)? MISC* (@DocType)? MISC* @Content MISC* #xmlDoc}
+    
+Prolog
+    = { '<?xml' _* (@Attribute)* _* '?>' #prolog }
+    
+DocType
+	= { '<!DOCTYPE' _* NAME _* ('SYSTEM')? _* STRING _* '>'}
+
+Content
+    = _* { ((@Element0 / COMMENT) _*)* #content } _*
+    
+
+Name
+    = { [A-Za-z_:] ([-A-Za-z0-9:._])*  #name }
+
+NAME
+	= [A-Za-z_:] ([-A-Za-z0-9:._])*
+
+String
+	= { '"' ( !'"' . )* '"' #string }
+
+STRING
+	= '"' ( !'"' . )* '"'
+
+NMTOKEN
+	= '"' NAME '"'
+
+IDTOKEN
+	= [-A-Za-z0-9:._]+ / <isa IDLIST>
+
+
+    
+    
+TEXT
+    = (![<&] .)+
+    
+
+
+//Reference //TODO
+
+Attribute
+    = _* { @Name '=' @String #keyvalue }
+    
+
+Cdata
+    = '<![CDATA['  { (!']]>' .)* #cdata } ']]>'
+    
+
+
+MISC
+    = _ / COMMENT
+    
+
+COMMENT
+    = '<!--' (!'-->' . )* '-->'
+    
+    
+QM
+		= '"'
+
+
+VS
+	= _* ',' _*
+	
+	
+EMPTY
+	= _*
+
+Empty
+	= {EMPTY #empty}
+
+Any
+	= {ANY #any}
+
+ANY
+	= _* TEXT _*
+
+PredefinedEntities
+	= {('&lt;' `&#38;#60;`) / ('&gt;' `"&#62;"`) / ('&amp;' `"&#38;#38;"`) / ('&apos;' `"&#39;"`) / ('&quot;' `"&#34;"`) / ( '&#' [a-zA-Z0-9]* ';' ) #predefinedEnt}
+		
+
+_ = [ \t\r\n]
+
+//Generated Part
