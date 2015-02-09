@@ -82,10 +82,10 @@ public class XMLPegGenerator extends PegGenerator {
 
 	private final void generate(StringBuilder sb, ParsingObject node, int index) {
 		if (!this.entityNameMap.isEmpty()) {
-			sb.append("PCdata = { ( @{ TEXT #text} / entity / @PredefinedEntities )* #PCDATA }\n\n");
+			sb.append("PCdata = { ( @{ TEXT #text} / entity / @PredefinedEntities )+ #PCDATA }\n\n");
 			generateEntityList(sb);
 		} else {
-			sb.append("PCdata = { ( @{ TEXT #text} / @PredefinedEntities )* #PCDATA }\n\n");
+			sb.append("PCdata = { ( @{ TEXT #text} / @PredefinedEntities )+ #PCDATA }\n\n");
 		}
 		sb.append("Element0 = ").append(" { @El_").append(firstElementName)
 				.append(" #member }\n\n"); //set start point
@@ -238,7 +238,11 @@ public class XMLPegGenerator extends PegGenerator {
 		//			sb.append(" @AttDef").append(index).append("_0 _* (&'/>' / &'>') ");
 		//		}
 		//		else {
-		generatePermutaitonAttributeRule(sb, requiredRules, index);
+		if (impliedList.isEmpty()) {
+			generatePermutaitonAttributeRule_origin(sb, attList, index);
+		} else {
+			generatePermutaitonAttributeRule(sb, requiredRules, index);
+		}
 		sb.append(" #attribute} \n\n");
 	}
 
@@ -315,7 +319,7 @@ public class XMLPegGenerator extends PegGenerator {
 				nextList = extractOtherNum(attList[currentHeadNum], attList);
 				sb.append(" (@AttDef").append(index).append("_").append(attList[currentHeadNum])
 						.append(" _*(");
-				generatePermutaitonAttributeRule(sb, nextList, index);
+				generatePermutaitonAttributeRule_origin(sb, nextList, index);
 				sb.append("))");
 				if (currentHeadNum < listLength - 1)
 					sb.append(" \n\t/");
@@ -504,7 +508,7 @@ public class XMLPegGenerator extends PegGenerator {
 					case "FIXED" :
 						impliedList.add(count);
 						String constValue = subnode.get(2).get(1).getText(); //node must have constant value when #FIXED constraint
-						sb.append("'").append(attName).append("' '=' '").append(constValue)
+						sb.append("'").append(attName).append("' _* '=' _* '").append(constValue)
 								.append("'");
 						break;
 					default :
@@ -522,7 +526,7 @@ public class XMLPegGenerator extends PegGenerator {
 
 	private final void generateAttTypedRule(StringBuilder sb, String attName, String attType,
 			ParsingObject node) {
-		sb.append("'").append(attName).append("'").append(" '=' ");
+		sb.append("'").append(attName).append("'").append(" _* '=' _* ");
 		switch (attType) {
 			case "CDATA" :
 				sb.append("STRING");
