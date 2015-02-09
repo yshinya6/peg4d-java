@@ -42,7 +42,8 @@ public class XMLValidator {
 		ParsingContext xmlContext = new ParsingContext(xmlSource);
 		xmlContext.match(genPeg, "File", new MemoizationManager());
 		if (xmlContext.hasByteChar()) {
-			setErrorMessage(xmlContext.fpos);
+			System.out.println("failure pos : " + xmlContext.fpos);
+			//setErrorMessage(xmlContext.fpos);
 		}
 		return !xmlContext.hasByteChar();
 	}
@@ -109,12 +110,14 @@ public class XMLValidator {
 		ParsingObject node = dtdContext.parse(peg4d, "File");
 		DTDAnalyzer analyzer = new DTDAnalyzer(node);
 		analyzer.analyze();
-		System.out.println("file name       : " + DTDFile);
-		System.out.println("element count   : " + analyzer.elementCount);
-		System.out.println("attlist count   : " + analyzer.attlistCount);
-		System.out.println("entity count    : " + analyzer.entityCount);
-		System.out.println("max attributes  : " + analyzer.maxAttribute);
-		System.out.println("max enumMembers : " + analyzer.maxEnumMeber);
+		System.out.println("file name          : " + DTDFile);
+		System.out.println("element count      : " + analyzer.elementCount);
+		System.out.println("attlist count      : " + analyzer.attlistCount);
+		System.out.println("entity count       : " + analyzer.entityCount);
+		System.out.println("max attributes     : " + analyzer.maxAttribute);
+		System.out.println("max enumMembers    : " + analyzer.maxEnumMeber);
+		System.out.println("max REQUIRED count : " + analyzer.maxRequiredCount);
+
 	}
 
 	public boolean getResult() {

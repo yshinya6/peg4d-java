@@ -82,10 +82,10 @@ public class XMLPegGenerator extends PegGenerator {
 
 	private final void generate(StringBuilder sb, ParsingObject node, int index) {
 		if (!this.entityNameMap.isEmpty()) {
-			sb.append("PCdata = { ( @{ TEXT #text} / entity  )* #PCDATA }\n\n");
+			sb.append("PCdata = { ( @{ TEXT #text} / entity / @PredefinedEntities )* #PCDATA }\n\n");
 			generateEntityList(sb);
 		} else {
-			sb.append("PCdata = { TEXT #PCDATA }\n\n");
+			sb.append("PCdata = { ( @{ TEXT #text} / @PredefinedEntities )* #PCDATA }\n\n");
 		}
 		sb.append("Element0 = ").append(" { @El_").append(firstElementName)
 				.append(" #member }\n\n"); //set start point
@@ -234,12 +234,11 @@ public class XMLPegGenerator extends PegGenerator {
 		int[] requiredRules = extractRequiredRule(attList);
 		generateAttChoiceRule(sb, impliedRules, index); // create implied choice rule 
 		sb.append("At_").append(elementName).append(" = {");
-		if (attDefSize == 1) {
-			sb.append(" @AttDef").append(index).append("_0 _* (&'/>' / &'>') ");
-		}
-		else {
-			generatePermutaitonAttributeRule(sb, requiredRules, index);
-		}
+		//		if (attDefSize == 1) {
+		//			sb.append(" @AttDef").append(index).append("_0 _* (&'/>' / &'>') ");
+		//		}
+		//		else {
+		generatePermutaitonAttributeRule(sb, requiredRules, index);
 		sb.append(" #attribute} \n\n");
 	}
 
@@ -576,7 +575,7 @@ public class XMLPegGenerator extends PegGenerator {
 		int entityNum = this.entityNameMap.get(entityName);
 		
 		sb.append("Entity").append(entityNum)
-				.append(" = { ").append(entityName).append(" `").append(replacedString)
+				.append(" = { '&").append(entityName).append(";' `").append(replacedString)
 				.append("` #entity }\n\n");
 	}
 
