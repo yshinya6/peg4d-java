@@ -317,6 +317,25 @@ public class Main {
 		if(Logger == null) {
 			ParsingContext context = new ParsingContext(newParsingSource(peg));
 			boolean res = context.match(peg, StartingPoint, new MemoizationManager());
+			if (context.isFailure()) {
+				System.out.println(context.source.formatPositionLine("error", context.fpos,
+						context.getErrorMessage()));
+				System.out.println(context.source.formatPositionLine("maximum matched",
+						context.head_pos, ""));
+				if (Main.DebugLevel > 0) {
+					System.out.println(context.maximumFailureTrace);
+				}
+				return;
+			}
+			if (context.hasByteChar()) {
+				System.out
+						.println(context.source.formatPositionLine("unconsumed", context.pos, ""));
+				System.out.println(context.source.formatPositionLine("maximum matched",
+						context.head_pos, ""));
+				if (Main.DebugLevel > 0) {
+					System.out.println(context.maximumFailureTrace);
+				}
+			}
 			System.exit(res ? 0 : 1);
 		}
 		else {
