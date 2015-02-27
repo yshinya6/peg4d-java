@@ -478,15 +478,15 @@ class FileSource extends ParsingSource {
 	
 	@Override
 	public final long linenum(long pos) {
-		long count = startLineNum(pos);
-		byteAt(pos); // restore buffer at pos
-		int offset = (int)(pos - this.buffer_offset);
-		for(int i = 0; i < offset; i++) {
-			if(this.buffer[i] == '\n') {
-				count++;
-			}
-		}
-		return count;
+		//		long count = startLineNum(pos);
+		//		byteAt(pos); // restore buffer at pos
+		//		int offset = (int)(pos - this.buffer_offset);
+		//		for(int i = 0; i < offset; i++) {
+		//			if(this.buffer[i] == '\n') {
+		//				count++;
+		//			}
+		//		}
+		return 0;
 	}
 	
 	private void readMainBuffer(long pos) {

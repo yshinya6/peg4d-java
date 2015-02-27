@@ -87,7 +87,7 @@ tokenized
 		/ @{'NMTOKEN' #NMTOKEN} 
 
 Enumerated
-	= { '(' _* @{ NAME #enumMember } _* ( @Or  @{ NAME #enumMember } )*   _* ')'  _* #enum }
+	= { '(' _* @{ [-A-Za-z0-9:._%;]* #enumMember } _* ( @Or  @{ [-A-Za-z0-9:._%;]* #enumMember } )*   _* ')'  _* #enum }
 	
 DefaultDecl
 	= { ( @{'#REQUIRED' #REQUIRED} / @{'#IMPLIED' #IMPLIED} / ( (@{'#FIXED' #FIXED})? _* @DefaultValue )) #default}

@@ -58,11 +58,11 @@ public class PEG4d extends ParsingBuilder {
 
 	Grammar peg;
 	
-	PEG4d(Grammar peg) {
+	public PEG4d(Grammar peg) {
 		this.peg = peg;
 	}
 	
-	boolean parse(ParsingObject po) {
+	public boolean parse(ParsingObject po) {
 		//System.out.println("DEBUG? parsed: " + po);
 		if(po.is(PEG4d.Rule)) {
 			if(po.size() > 3) {

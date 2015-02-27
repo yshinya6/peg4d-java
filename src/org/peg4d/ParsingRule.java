@@ -16,7 +16,7 @@ public class ParsingRule {
 	String baseName;
 	public String ruleName;
 
-	ParsingObject po;
+	public ParsingObject po;
 	public int type;
 	public ParsingExpression expr;
 	
@@ -38,13 +38,13 @@ public class ParsingRule {
 	
 	@Override
 	public String toString() {
-		String t = "";
-		switch(this.type) {
-		case LexicalRule:   t = "boolean "; break;
-		case ObjectRule:    t = "Object "; break;
-		case OperationRule: t = "void "; break;
-		}
-		return t + this.ruleName + "[" + this.minlen + "]" + "=" + this.expr;
+		//		String t = "";
+		//		switch(this.type) {
+		//		case LexicalRule:   t = "boolean "; break;
+		//		case ObjectRule:    t = "Object "; break;
+		//		case OperationRule: t = "void "; break;
+		//		}
+		return this.ruleName;
 	}
 	
 	

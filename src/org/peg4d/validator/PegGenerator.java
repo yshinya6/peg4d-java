@@ -10,16 +10,15 @@ import java.io.InputStreamReader;
 import org.peg4d.Main;
 import org.peg4d.ParsingObject;
 
-public class PegGenerator {
+public abstract class PegGenerator {
 	ParsingObject node;
 
 	public PegGenerator(ParsingObject node) {
 		this.node = node;
 	}
 	
-	public String generatePegFile() {
-		return null;
-	}
+	public abstract String generatePegFile();
+
 
 	protected StringBuilder loadSource(String fileName) {
 		InputStream Stream = Main.class.getResourceAsStream("/" + fileName);
@@ -51,5 +50,6 @@ public class PegGenerator {
 		}
 		return null;
 	}
+
 }
 

@@ -26,6 +26,11 @@ S
 BLOCKCOMMENT
 	= '/*' (!'*/' .)* '*/'
 
+line 
+	= newline
+	
+
+
 LINECOMMENT
 	= '//' (!'\n' .)*
 

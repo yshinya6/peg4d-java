@@ -2,8 +2,6 @@ package org.peg4d;
 
 import java.util.TreeMap;
 
-import javax.swing.text.Position;
-
 import org.peg4d.expression.NonTerminal;
 import org.peg4d.expression.Optimizer;
 import org.peg4d.expression.ParsingChoice;
@@ -25,7 +23,7 @@ public class Grammar {
 
 	int optimizationLevel;
 		
-	Grammar(GrammarFactory factory, String name) {
+	public Grammar(GrammarFactory factory, String name) {
 		this.name = name;
 		this.factory = factory == null ? GrammarFactory.Grammar.factory : factory;
 		this.ruleMap  = new UMap<ParsingRule>();
